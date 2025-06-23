@@ -766,6 +766,17 @@ curl -X PUT "http://localhost:8000/sessions/my_session/environment" \
 - Environment state display
 - Event history timeline
 
+![NPC Engine ](./assets/s1.png)
+![NPC Engine ](./assets/s2.png)
+![NPC Engine ](./assets/s3.png)
+![NPC Engine ](./assets/s4.png)
+![NPC Engine ](./assets/s5.png)
+![NPC Engine ](./assets/s6.png)
+![NPC Engine ](./assets/s7.png)
+![NPC Engine ](./assets/s8.png)
+![NPC Engine ](./assets/s9.png)
+
+
 ### 👥 **NPC Manager**
 - Create/edit NPCs with rich personalities
 - Configure traits, background, goals, relationships

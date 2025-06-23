@@ -65,4 +65,80 @@ player_actions:
   requires_target: true
   target_type: npc
   visibility: public
+- action_id: player_craft_potion
+  affects_mood: false
+  category: player
+  cooldown: 0.0
+  cost: {}
+  creates_memory: true
+  description: Craft a magical potion with various ingredients
+  name: Craft Potion
+  properties:
+  - default: null
+    description: Type of potion to craft
+    name: potion_type
+    required: true
+    type: string
+    validation:
+      options:
+      - healing
+      - mana
+      - strength
+      - speed
+      - invisibility
+  - default: 1
+    description: Potency level of the potion (1-5)
+    name: potency
+    required: false
+    type: integer
+    validation:
+      max: 5
+      min: 1
+  - default: 30
+    description: Time in seconds to brew the potion
+    name: brewing_time
+    required: false
+    type: float
+    validation:
+      max: 300
+      min: 10
+  - default: false
+    description: Add magical sparkles to the potion
+    name: add_sparkles
+    required: false
+    type: boolean
+    validation: {}
+  requirements:
+    required_tools:
+    - cauldron
+    - stirring_rod
+    skill_level: 10
+  requires_target: true
+  target_type: object
+  visibility: public
+- action_id: player_npc_trade
+  affects_mood: true
+  category: player
+  cooldown: 0.0
+  cost: {}
+  creates_memory: true
+  description: Trade items with another character
+  name: Trade Items
+  properties:
+  - default: null
+    description: Item being offered
+    name: offer_item
+    required: true
+    type: string
+    validation: {}
+  - default: null
+    description: Item being requested
+    name: request_item
+    required: false
+    type: string
+    validation: {}
+  requirements: {}
+  requires_target: true
+  target_type: player
+  visibility: public
 version: '1.0'

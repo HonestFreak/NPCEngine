@@ -32,10 +32,20 @@ interface SessionPersistenceConfig {
   vertexai_corpus?: string
 }
 
+interface NPCTemplate {
+  npc_id: string
+  name: string
+  role: string
+  personality_traits: string[]
+  background: string
+  location: string
+}
+
 interface CreateSessionForm {
   session_id: string
   game_title: string
-  npcs: string[]
+  npcs: NPCTemplate[]
+  selectedGlobalNPCs: string[]
   persistence: SessionPersistenceConfig
 }
 
@@ -122,6 +132,7 @@ const Dashboard: React.FC = () => {
     session_id: '',
     game_title: '',
     npcs: [],
+    selectedGlobalNPCs: [],
     persistence: {
       type: 'memory'
     }
@@ -134,6 +145,8 @@ const Dashboard: React.FC = () => {
     action: 'speak',
     action_data: ''
   })
+
+  const [globalNPCs, setGlobalNPCs] = useState<any[]>([])
 
   // Helper function to format environment display
   const formatEnvironment = (environment: string | { time_of_day?: string; [key: string]: any }): string => {
@@ -276,237 +289,251 @@ const Dashboard: React.FC = () => {
     }
   }, [eventForm.session_id])
 
-  const createSession = async () => {
-    if (!createForm.session_id.trim()) {
-      alert('Please enter a session ID')
-      return
-    }
-
-    if (!createForm.game_title.trim()) {
-      alert('Please enter a game title')
-      return
-    }
-
-    // Validate persistence config
-    if (createForm.persistence.type === 'database' && !createForm.persistence.database_url?.trim()) {
-      alert('Please enter a database URL for database persistence')
-      return
-    }
-
-    if (createForm.persistence.type === 'vertexai' && !createForm.persistence.vertexai_project?.trim()) {
-      alert('Please enter a GCP Project ID for Vertex AI persistence')
-      return
-    }
-
+  const loadGlobalNPCs = async () => {
     try {
-      setCreating(true)
+      console.log('🌐 Loading global NPCs...')
+      const response = await axios.get(`${API_BASE}/config/npcs/instances`)
+      console.log('📦 Global NPCs loaded:', response.data)
+      setGlobalNPCs(response.data || [])
+    } catch (err) {
+      console.error('Error loading global NPCs:', err)
+      setGlobalNPCs([])
+    }
+  }
+
+  useEffect(() => {
+    loadServerStatus()
+    loadDashboardData()
+    loadAvailableActions()
+    loadGlobalNPCs() // Load global NPCs on component mount
+  }, [])
+
+  const createSession = async () => {
+    if (!createForm.session_id || !createForm.game_title) {
+      alert('Please fill in Session ID and Game Title')
+      return
+    }
+
+    setCreating(true)
+    try {
+      console.log('🚀 Creating session with form data:', createForm)
+
+      // Combine manually created NPCs with selected global NPCs
+      let allNPCs = [...createForm.npcs]
       
-      // Create session with persistence configuration - proper backend format
+      // Convert selected global NPCs to NPCTemplate format
+      const selectedGlobalNPCObjects = globalNPCs.filter(npc => 
+        createForm.selectedGlobalNPCs.includes(npc.id)
+      )
+      
+      for (const globalNPC of selectedGlobalNPCObjects) {
+        const npcTemplate: NPCTemplate = {
+          npc_id: globalNPC.id,
+          name: globalNPC.name,
+          role: globalNPC.properties?.job || 'villager',
+          personality_traits: Array.isArray(globalNPC.properties?.personality_traits) 
+            ? globalNPC.properties.personality_traits 
+            : typeof globalNPC.properties?.personality_traits === 'string'
+            ? globalNPC.properties.personality_traits.split(', ')
+            : ['friendly'],
+          background: globalNPC.description || '',
+          location: globalNPC.properties?.location || 'village_center'
+        }
+        allNPCs.push(npcTemplate)
+      }
+      
+      // Sessions can be created without NPCs (will be added later)
+      if (allNPCs.length === 0) {
+        console.log('Creating session without NPCs - they can be added later')
+      }
+
+      // Convert NPCTemplate to NPCData format expected by backend
+      const npcs = allNPCs.map(npc => ({
+        personality: {
+          name: npc.name,
+          role: npc.role,
+          personality_traits: npc.personality_traits,
+          background: npc.background,
+          goals: ["help visitors", "live peacefully"], // Default goals
+          relationships: {},
+          dialogue_style: "friendly"
+        },
+        state: {
+          npc_id: npc.npc_id,
+          current_location: npc.location,
+          current_activity: "idle",
+          mood: "neutral",
+          health: 100.0,
+          energy: 100.0,
+          inventory: [],
+          status_effects: [],
+          custom_attributes: {}
+        },
+        memory: {
+          short_term: [],
+          long_term: [],
+          relationships_memory: {}
+        }
+      }))
+
+      // Create proper Environment structure
+      const environment = {
+        session_id: createForm.session_id,
+        locations: {
+          "village_center": {
+            location_id: "village_center",
+            name: "Village Center",
+            location_type: "town",
+            description: "The bustling center of the village where people gather",
+            connected_locations: [],
+            properties: {},
+            npcs_present: npcs.map(npc => npc.state.npc_id),
+            items_present: []
+          }
+        },
+        time_of_day: "morning",
+        weather: "sunny",
+        game_time: 0,
+        world_properties: {},
+        active_events: []
+      }
+
+      // Get available actions with proper ActionDefinition structure
+      // Filter to only use valid action types that the backend accepts
+      const validActionTypes = ['speak', 'move', 'interact', 'attack', 'use_item', 'give_item', 'take_item', 'emote', 'wait', 'follow', 'trade', 'flee', 'investigate', 'work', 'rest', 'remember_event', 'custom']
+      
+      const availableActions = actionDefinitions.length > 0 ? actionDefinitions
+        .filter(action => validActionTypes.includes(action.action_id))
+        .map(action => ({
+          action_type: action.action_id,
+          properties: action.properties.map(prop => ({
+            name: prop.name,
+            type: prop.type,
+            required: prop.required,
+            description: prop.description || "",
+            default_value: prop.default,
+            validation: prop.validation || {}
+          })),
+          description: action.description || "",
+          preconditions: [],
+          examples: []
+        })) : [
+        {
+          action_type: "speak",
+          description: "Speak to someone",
+          properties: [
+            {
+              name: "message",
+              type: "string",
+              required: true,
+              description: "What to say",
+              default_value: "",
+              validation: {}
+            },
+            {
+              name: "tone",
+              type: "string",
+              required: false,
+              description: "Tone of voice",
+              default_value: "neutral",
+              validation: {}
+            }
+          ],
+          preconditions: [],
+          examples: []
+        },
+        {
+          action_type: "move",
+          description: "Move to a location",
+          properties: [
+            {
+              name: "destination",
+              type: "string",
+              required: true,
+              description: "Where to move",
+              default_value: "",
+              validation: {}
+            }
+          ],
+          preconditions: [],
+          examples: []
+        },
+        {
+          action_type: "emote",
+          description: "Express emotion",
+          properties: [
+            {
+              name: "emotion",
+              type: "string",
+              required: true,
+              description: "Type of emotion",
+              default_value: "",
+              validation: {}
+            },
+            {
+              name: "intensity",
+              type: "integer",
+              required: false,
+              description: "Intensity level 1-10",
+              default_value: 5,
+              validation: {}
+            }
+          ],
+          preconditions: [],
+          examples: []
+        }
+      ]
+
       const sessionConfig = {
         session_id: createForm.session_id,
         game_title: createForm.game_title,
         persistence: createForm.persistence,
-        npcs: [
-          {
-            personality: {
-              name: "Demo NPC",
-              role: "villager",
-              personality_traits: ["friendly", "helpful"],
-              background: "A helpful NPC for testing",
-              goals: ["assist players", "provide information"],
-              relationships: {},
-              dialogue_style: "casual"
-            },
-            state: {
-              npc_id: "npc_demo_1",
-              current_location: "village_center",
-              current_activity: "idle",
-              mood: "neutral",
-              health: 100.0,
-              energy: 100.0,
-              inventory: [],
-              status_effects: [],
-              custom_attributes: {}
-            },
-            memory: {
-              short_term: [],
-              long_term: [],
-              relationships_memory: {}
-            }
-          }
-        ],
-        environment: {
-          session_id: createForm.session_id,
-          locations: {
-            "village_center": {
-              location_id: "village_center",
-              name: "Village Center",
-              location_type: "town",
-              description: "The bustling center of the village",
-              connected_locations: [],
-              properties: {},
-              npcs_present: ["npc_demo_1"],
-              items_present: []
-            }
-          },
-          time_of_day: "morning",
-          weather: "sunny",
-          game_time: 0,
-          world_properties: {},
-          active_events: []
-        },
-        available_actions: [
-          {
-            action_type: "speak",
-            properties: [
-              {
-                name: "message",
-                type: "string",
-                required: true,
-                description: "What to say",
-                default_value: null,
-                validation: {
-                  max_length: 500
-                }
-              },
-              {
-                name: "tone",
-                type: "string",
-                required: false,
-                description: "Tone of voice",
-                default_value: "neutral",
-                validation: {
-                  options: ["neutral", "friendly", "angry", "excited"]
-                }
-              }
-            ],
-            description: "Makes the NPC speak",
-            preconditions: [],
-            examples: ["Hello there!"]
-          },
-          {
-            action_type: "emote",
-            properties: [
-              {
-                name: "emotion",
-                type: "string",
-                required: true,
-                description: "Emotion to express",
-                default_value: null,
-                validation: {
-                  options: ["happy", "sad", "angry", "excited", "curious"]
-                }
-              }
-            ],
-            description: "Makes the NPC show emotion",
-            preconditions: [],
-            examples: ["Show happiness"]
-          }
-        ],
+        npcs: npcs,
+        environment: environment,
+        available_actions: availableActions,
         settings: {}
       }
-      
-      const response = await axios.post(`${API_BASE}/sessions`, sessionConfig)
-      
-      console.log('Session created:', response.data)
 
-      // Refresh data to show new session
-      await loadDashboardData()
+      console.log('📋 Final session config:', JSON.stringify(sessionConfig, null, 2))
+
+      const response = await axios.post(`${API_BASE}/sessions`, sessionConfig)
+      console.log('✅ Session created successfully:', response.data)
       
-      // Reset form
+      alert('Session created successfully!')
+      setShowCreateSession(false)
       setCreateForm({
         session_id: '',
         game_title: '',
         npcs: [],
-        persistence: {
-          type: 'memory'
-        }
+        selectedGlobalNPCs: [], // Reset selected global NPCs
+        persistence: { type: 'memory' }
       })
-      setShowCreateSession(false)
+      loadDashboardData()
+    } catch (error: any) {
+      console.error('❌ Error creating session:', error)
       
-      alert('Session created successfully!')
+      let errorMessage = 'Unknown error'
       
-    } catch (err: any) {
-      console.error('Error creating session:', err)
-      
-      // If config-based creation fails, try the simplified creation
-      try {
-        const fallbackConfig = {
-          session_id: createForm.session_id,
-          game_title: createForm.game_title || "NPC Engine Demo",
-          persistence: createForm.persistence,
-          npcs: [],  // Start with no NPCs for simplicity
-          environment: {
-            session_id: createForm.session_id,
-            locations: {},
-            time_of_day: "morning",
-            weather: "sunny",
-            game_time: 0,
-            world_properties: {},
-            active_events: []
-          },
-          available_actions: [
-            {
-              action_type: "speak",
-              properties: [
-                {
-                  name: "message",
-                  type: "string",
-                  required: true,
-                  description: "What to say",
-                  default_value: null,
-                  validation: {
-                    max_length: 500
-                  }
-                }
-              ],
-              description: "Makes the NPC speak",
-              preconditions: [],
-              examples: ["Hello there!"]
-            }
-          ],
-          settings: {}
+      if (error.response?.data?.detail) {
+        const detail = error.response.data.detail
+        if (Array.isArray(detail)) {
+          // Handle validation errors (422)
+          const validationErrors = detail.map(err => {
+            const field = err.loc ? err.loc.join('.') : 'unknown field'
+            return `${field}: ${err.msg}`
+          }).join('\n')
+          errorMessage = `Validation errors:\n${validationErrors}`
+        } else if (typeof detail === 'string') {
+          // Handle string error messages
+          errorMessage = detail
+        } else {
+          errorMessage = JSON.stringify(detail)
         }
-        
-        await axios.post(`${API_BASE}/sessions`, fallbackConfig)
-        await loadDashboardData()
-        
-        setCreateForm({
-          session_id: '',
-          game_title: '',
-          npcs: [],
-          persistence: {
-            type: 'memory'
-          }
-        })
-        setShowCreateSession(false)
-        
-        alert('Session created successfully!')
-        
-      } catch (fallbackErr: any) {
-        console.error('Fallback session creation failed:', fallbackErr)
-        let errorMessage = 'Failed to create session'
-        
-        if (fallbackErr.response?.data?.detail) {
-          if (Array.isArray(fallbackErr.response.data.detail)) {
-            errorMessage = `Validation errors: ${fallbackErr.response.data.detail.map((e: any) => e.msg || e).join(', ')}`
-          } else {
-            errorMessage = String(fallbackErr.response.data.detail)
-          }
-        } else if (err.response?.data?.detail) {
-          if (Array.isArray(err.response.data.detail)) {
-            errorMessage = `Validation errors: ${err.response.data.detail.map((e: any) => e.msg || e).join(', ')}`
-          } else {
-            errorMessage = String(err.response.data.detail)
-          }
-        } else if (fallbackErr.message) {
-          errorMessage = String(fallbackErr.message)
-        } else if (err.message) {
-          errorMessage = String(err.message)
-        }
-        
-        alert(errorMessage)
+      } else {
+        errorMessage = error.message || 'Unknown error'
       }
+      
+      alert(`Failed to create session:\n${errorMessage}`)
     } finally {
       setCreating(false)
     }
@@ -809,7 +836,10 @@ const Dashboard: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-200">Quick Actions</h2>
           <button
-            onClick={() => setShowCreateSession(true)}
+            onClick={() => {
+              setShowCreateSession(true)
+              loadGlobalNPCs() // Refresh global NPCs when opening form
+            }}
             className="btn-primary flex items-center space-x-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1157,10 +1187,13 @@ const Dashboard: React.FC = () => {
             </svg>
             <h3 className="text-lg font-medium text-slate-600 dark:text-slate-400 mb-2">No Active Sessions</h3>
             <p className="text-slate-500 dark:text-slate-500 mb-4">Create your first session to get started</p>
-            <button
-              onClick={() => setShowCreateSession(true)}
-              className="btn-primary"
-            >
+                          <button
+                onClick={() => {
+                  setShowCreateSession(true)
+                  loadGlobalNPCs() // Refresh global NPCs when opening form
+                }}
+                className="btn-primary"
+              >
               Create Session
             </button>
           </div>
@@ -1271,6 +1304,386 @@ const Dashboard: React.FC = () => {
                     placeholder="Enter game title"
                     className="input-field"
                   />
+                </div>
+              </div>
+
+              {/* NPC Configuration */}
+              <div>
+                <label className="block text-sm font-medium mb-3 text-slate-700 dark:text-slate-300">
+                  🎭 NPCs Configuration
+                </label>
+                <div className="space-y-4">
+                  {/* Global NPCs Selection */}
+                  {globalNPCs.length > 0 && (
+                    <div className="border border-blue-200 dark:border-blue-800 rounded-lg p-4 bg-blue-50 dark:bg-blue-900/20">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-medium text-blue-800 dark:text-blue-200 flex items-center">
+                          🌐 Global NPCs
+                          <span className="ml-2 text-sm font-normal text-blue-600 dark:text-blue-300">
+                            ({globalNPCs.length} available)
+                          </span>
+                        </h4>
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const allNPCIds = globalNPCs.map(npc => npc.id)
+                              setCreateForm({ ...createForm, selectedGlobalNPCs: allNPCIds })
+                            }}
+                            className="text-xs btn-secondary py-1 px-2"
+                          >
+                            Select All
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCreateForm({ ...createForm, selectedGlobalNPCs: [] })
+                            }}
+                            className="text-xs btn-secondary py-1 px-2"
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                        Select NPCs from your global collection to include in this session. These NPCs were created in the NPC Manager.
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-48 overflow-y-auto">
+                        {globalNPCs.map((npc) => {
+                          const npcId = npc.id
+                          const isSelected = createForm.selectedGlobalNPCs.includes(npcId)
+                          return (
+                            <div
+                              key={npcId}
+                              className={`p-3 rounded border cursor-pointer transition-all ${
+                                isSelected
+                                  ? 'border-blue-500 bg-blue-100 dark:bg-blue-800/30'
+                                  : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                              }`}
+                              onClick={() => {
+                                const newSelected = isSelected
+                                  ? createForm.selectedGlobalNPCs.filter(id => id !== npcId)
+                                  : [...createForm.selectedGlobalNPCs, npcId]
+                                setCreateForm({ ...createForm, selectedGlobalNPCs: newSelected })
+                              }}
+                            >
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-medium text-sm text-gray-800 dark:text-gray-200">
+                                  {npc.name}
+                                </span>
+                                {isSelected && (
+                                  <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
+                                <div>ID: {npcId}</div>
+                                <div>Role: {npc.properties?.job || 'Unknown'}</div>
+                                <div>Location: {npc.properties?.location || 'Unknown'}</div>
+                              </div>
+                              {npc.description && (
+                                <div className="text-xs text-gray-500 dark:text-gray-500 mt-1 line-clamp-2">
+                                  {npc.description}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                      {createForm.selectedGlobalNPCs.length > 0 && (
+                        <div className="mt-3 p-2 bg-blue-100 dark:bg-blue-800/20 rounded text-sm text-blue-800 dark:text-blue-200">
+                          ✅ {createForm.selectedGlobalNPCs.length} global NPC{createForm.selectedGlobalNPCs.length !== 1 ? 's' : ''} selected
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Manual NPC Creation */}
+                  <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-800 dark:text-gray-200 mb-3 flex items-center">
+                      ➕ Create New NPCs
+                      <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
+                        (Optional - add custom NPCs for this session)
+                      </span>
+                    </h4>
+                  {createForm.npcs.length === 0 ? (
+                    <div className="text-center py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+                      <div className="text-gray-500 dark:text-gray-400">
+                        <svg className="w-12 h-12 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <p className="text-lg font-medium">No NPCs added yet</p>
+                        <p className="text-sm">Add NPCs to populate your game world</p>
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newNPC: NPCTemplate = {
+                              npc_id: `npc_${Date.now()}`,
+                              name: '',
+                              role: 'villager',
+                              personality_traits: ['friendly'],
+                              background: '',
+                              location: 'village_center'
+                            }
+                            setCreateForm({ ...createForm, npcs: [...createForm.npcs, newNPC] })
+                          }}
+                          className="flex-1 btn-primary"
+                        >
+                          Add Your First NPC
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const defaultNPCs: NPCTemplate[] = [
+                              {
+                                npc_id: 'guard_001',
+                                name: 'Village Guard',
+                                role: 'guard',
+                                personality_traits: ['stern', 'protective'],
+                                background: 'A loyal guard protecting the village entrance',
+                                location: 'village_gate'
+                              },
+                              {
+                                npc_id: 'merchant_001',
+                                name: 'Trader Bob',
+                                role: 'merchant',
+                                personality_traits: ['cheerful', 'helpful'],
+                                background: 'A friendly merchant selling goods at the market',
+                                location: 'market_square'
+                              },
+                              {
+                                npc_id: 'elder_001',
+                                name: 'Village Elder',
+                                role: 'elder',
+                                personality_traits: ['wise', 'mysterious'],
+                                background: 'The wise elder who knows the village\'s secrets',
+                                location: 'village_center'
+                              },
+                              {
+                                npc_id: 'innkeeper_001',
+                                name: 'Sarah the Innkeeper',
+                                role: 'artisan',
+                                personality_traits: ['friendly', 'curious'],
+                                background: 'Runs the local inn and knows all the gossip',
+                                location: 'inn'
+                              }
+                            ]
+                            setCreateForm({ ...createForm, npcs: defaultNPCs })
+                          }}
+                          className="flex-1 btn-secondary"
+                        >
+                          🎭 Add Demo NPCs
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {createForm.npcs.map((npc, index) => (
+                        <div key={index} className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
+                          <div className="flex items-center justify-between mb-3">
+                            <h4 className="font-medium text-gray-800 dark:text-gray-200">
+                              NPC #{index + 1}
+                            </h4>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newNPCs = createForm.npcs.filter((_, i) => i !== index)
+                                setCreateForm({ ...createForm, npcs: newNPCs })
+                              }}
+                              className="text-red-500 hover:text-red-700 p-1"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                                NPC ID
+                              </label>
+                              <input
+                                type="text"
+                                value={npc.npc_id}
+                                onChange={(e) => {
+                                  const newNPCs = [...createForm.npcs]
+                                  newNPCs[index] = { ...newNPCs[index], npc_id: e.target.value }
+                                  setCreateForm({ ...createForm, npcs: newNPCs })
+                                }}
+                                className="input-field text-sm"
+                                placeholder="npc_guard_001"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                                Name
+                              </label>
+                              <input
+                                type="text"
+                                value={npc.name}
+                                onChange={(e) => {
+                                  const newNPCs = [...createForm.npcs]
+                                  newNPCs[index] = { ...newNPCs[index], name: e.target.value }
+                                  setCreateForm({ ...createForm, npcs: newNPCs })
+                                }}
+                                className="input-field text-sm"
+                                placeholder="Village Guard"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                                Role
+                              </label>
+                              <select
+                                value={npc.role}
+                                onChange={(e) => {
+                                  const newNPCs = [...createForm.npcs]
+                                  newNPCs[index] = { ...newNPCs[index], role: e.target.value }
+                                  setCreateForm({ ...createForm, npcs: newNPCs })
+                                }}
+                                className="input-field text-sm"
+                              >
+                                <option value="villager">Villager</option>
+                                <option value="guard">Guard</option>
+                                <option value="merchant">Merchant</option>
+                                <option value="scholar">Scholar</option>
+                                <option value="noble">Noble</option>
+                                <option value="artisan">Artisan</option>
+                                <option value="child">Child</option>
+                                <option value="elder">Elder</option>
+                              </select>
+                            </div>
+                            
+                            <div>
+                              <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                                Location
+                              </label>
+                              <select
+                                value={npc.location}
+                                onChange={(e) => {
+                                  const newNPCs = [...createForm.npcs]
+                                  newNPCs[index] = { ...newNPCs[index], location: e.target.value }
+                                  setCreateForm({ ...createForm, npcs: newNPCs })
+                                }}
+                                className="input-field text-sm"
+                              >
+                                <option value="village_center">Village Center</option>
+                                <option value="village_gate">Village Gate</option>
+                                <option value="tavern">Tavern</option>
+                                <option value="market_square">Market Square</option>
+                                <option value="blacksmith">Blacksmith</option>
+                                <option value="temple">Temple</option>
+                                <option value="library">Library</option>
+                                <option value="inn">Inn</option>
+                              </select>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-3">
+                            <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                              Background Story
+                            </label>
+                            <textarea
+                              value={npc.background}
+                              onChange={(e) => {
+                                const newNPCs = [...createForm.npcs]
+                                newNPCs[index] = { ...newNPCs[index], background: e.target.value }
+                                setCreateForm({ ...createForm, npcs: newNPCs })
+                              }}
+                              className="input-field text-sm"
+                              rows={2}
+                              placeholder="A brief background story for this NPC..."
+                            />
+                          </div>
+                          
+                          <div className="mt-3">
+                            <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                              Personality Traits
+                            </label>
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              {npc.personality_traits.map((trait, traitIndex) => (
+                                <span
+                                  key={traitIndex}
+                                  className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                                >
+                                  {trait}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newNPCs = [...createForm.npcs]
+                                      newNPCs[index] = {
+                                        ...newNPCs[index],
+                                        personality_traits: newNPCs[index].personality_traits.filter((_, ti) => ti !== traitIndex)
+                                      }
+                                      setCreateForm({ ...createForm, npcs: newNPCs })
+                                    }}
+                                    className="ml-1 text-blue-600 hover:text-blue-800"
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                            <div className="flex gap-2">
+                              <select
+                                onChange={(e) => {
+                                  if (e.target.value && !npc.personality_traits.includes(e.target.value)) {
+                                    const newNPCs = [...createForm.npcs]
+                                    newNPCs[index] = {
+                                      ...newNPCs[index],
+                                      personality_traits: [...newNPCs[index].personality_traits, e.target.value]
+                                    }
+                                    setCreateForm({ ...createForm, npcs: newNPCs })
+                                    e.target.value = ''
+                                  }
+                                }}
+                                className="input-field text-sm flex-1"
+                              >
+                                <option value="">Add personality trait...</option>
+                                <option value="friendly">Friendly</option>
+                                <option value="stern">Stern</option>
+                                <option value="wise">Wise</option>
+                                <option value="curious">Curious</option>
+                                <option value="protective">Protective</option>
+                                <option value="cheerful">Cheerful</option>
+                                <option value="grumpy">Grumpy</option>
+                                <option value="mysterious">Mysterious</option>
+                                <option value="helpful">Helpful</option>
+                                <option value="suspicious">Suspicious</option>
+                                <option value="brave">Brave</option>
+                                <option value="cowardly">Cowardly</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newNPC: NPCTemplate = {
+                            npc_id: `npc_${Date.now()}`,
+                            name: '',
+                            role: 'villager',
+                            personality_traits: ['friendly'],
+                            background: '',
+                            location: 'village_center'
+                          }
+                          setCreateForm({ ...createForm, npcs: [...createForm.npcs, newNPC] })
+                        }}
+                        className="w-full btn-secondary border-dashed"
+                      >
+                        + Add Another NPC
+                      </button>
+                    </div>
+                  )}
+                  </div>
                 </div>
               </div>
 
@@ -1469,6 +1882,34 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
 
+            {/* Validation Messages */}
+            {(!createForm.session_id || !createForm.game_title || (createForm.npcs.length === 0 && createForm.selectedGlobalNPCs.length === 0) || createForm.npcs.some(npc => !npc.name.trim() || !npc.npc_id.trim())) && (
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                      Complete Required Fields
+                    </h3>
+                    <div className="mt-2 text-sm text-amber-700 dark:text-amber-300">
+                      <ul className="list-disc list-inside space-y-1">
+                        {!createForm.session_id && <li>Session ID is required</li>}
+                        {!createForm.game_title && <li>Game Title is required</li>}
+                        {(createForm.npcs.length === 0 && createForm.selectedGlobalNPCs.length === 0) && <li>At least one NPC must be added (global or custom)</li>}
+                        {createForm.npcs.some(npc => !npc.name.trim() || !npc.npc_id.trim()) && 
+                          <li>All custom NPCs must have both a name and NPC ID</li>
+                        }
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex space-x-3 mt-6">
               <button
                 onClick={() => setShowCreateSession(false)}
@@ -1480,7 +1921,7 @@ const Dashboard: React.FC = () => {
               <button
                 onClick={createSession}
                 className="flex-1 btn-primary"
-                disabled={creating || !createForm.session_id || !createForm.game_title}
+                disabled={creating || !createForm.session_id || !createForm.game_title || (createForm.npcs.length === 0 && createForm.selectedGlobalNPCs.length === 0) || createForm.npcs.some(npc => !npc.name.trim() || !npc.npc_id.trim())}
               >
                 {creating ? 'Creating...' : 'Create Session'}
               </button>

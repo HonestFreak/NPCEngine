@@ -1,0 +1,68 @@
+enabled_default_player_actions:
+- inspect
+- use_item
+- attack
+- defend
+- run
+global_settings:
+  action_queue_size: 10
+  allow_custom_actions: true
+  max_actions_per_turn: 3
+player_actions:
+- action_id: player_inspect
+  affects_mood: false
+  category: player
+  cooldown: 1.0
+  cost: {}
+  creates_memory: true
+  description: Examine an object or character in detail
+  name: Inspect
+  properties:
+  - default: general
+    description: What aspect to focus on when inspecting
+    name: focus_area
+    required: false
+    type: string
+    validation:
+      options:
+      - general
+      - combat
+      - magical
+      - historical
+  requirements: {}
+  requires_target: true
+  target_type: any
+  visibility: public
+- action_id: player_attack
+  affects_mood: true
+  category: player
+  cooldown: 2.0
+  cost:
+    stamina: 5.0
+  creates_memory: true
+  description: Perform a basic attack on a target
+  name: Attack
+  properties:
+  - default: melee
+    description: Type of attack to perform
+    name: attack_type
+    required: false
+    type: string
+    validation:
+      options:
+      - melee
+      - ranged
+      - special
+  - default: 10
+    description: Power level of the attack
+    name: power
+    required: false
+    type: integer
+    validation:
+      max: 100
+      min: 1
+  requirements: {}
+  requires_target: true
+  target_type: enemy
+  visibility: public
+version: '1.0'

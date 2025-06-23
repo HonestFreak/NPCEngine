@@ -1046,7 +1046,7 @@ class NPCEngineAPI:
             try:
                 config_loader = ConfigLoader()
                 npc_config = config_loader.load_npc_config()
-                return npc_config.npcs
+                return list(npc_config.instances.values())
             except Exception as e:
                 raise HTTPException(status_code=500, detail=f"Failed to load NPC instances: {str(e)}")
         
@@ -1058,16 +1058,16 @@ class NPCEngineAPI:
                 npc_config = config_loader.load_npc_config()
                 
                 # Check if NPC ID already exists
-                if any(existing_npc.npc_id == npc.npc_id for existing_npc in npc_config.npcs):
-                    raise HTTPException(status_code=400, detail=f"NPC with ID '{npc.npc_id}' already exists")
+                if npc.id in npc_config.instances:
+                    raise HTTPException(status_code=400, detail=f"NPC with ID '{npc.id}' already exists")
                 
                 # Validate schema exists
-                if not any(s.schema_id == npc.schema_id for s in npc_config.schemas):
+                if npc.schema_id not in npc_config.schemas:
                     raise HTTPException(status_code=400, detail=f"Schema '{npc.schema_id}' not found")
                 
-                npc_config.npcs.append(npc)
+                npc_config.instances[npc.id] = npc
                 config_loader.save_npc_config(npc_config)
-                return {"message": f"NPC '{npc.npc_id}' added successfully"}
+                return {"message": f"NPC '{npc.id}' added successfully"}
             except HTTPException:
                 raise
             except Exception as e:
@@ -1081,15 +1081,16 @@ class NPCEngineAPI:
                 npc_config = config_loader.load_npc_config()
                 
                 # Find and update NPC
-                for i, existing_npc in enumerate(npc_config.npcs):
-                    if existing_npc.npc_id == npc_id:
-                        # Validate schema exists
-                        if not any(s.schema_id == npc.schema_id for s in npc_config.schemas):
-                            raise HTTPException(status_code=400, detail=f"Schema '{npc.schema_id}' not found")
-                        
-                        npc_config.npcs[i] = npc
-                        config_loader.save_npc_config(npc_config)
-                        return {"message": f"NPC '{npc_id}' updated successfully"}
+                if npc_id not in npc_config.instances:
+                    raise HTTPException(status_code=404, detail=f"NPC with ID '{npc_id}' not found")
+                
+                # Validate schema exists
+                if npc.schema_id not in npc_config.schemas:
+                    raise HTTPException(status_code=400, detail=f"Schema '{npc.schema_id}' not found")
+                
+                npc_config.instances[npc_id] = npc
+                config_loader.save_npc_config(npc_config)
+                return {"message": f"NPC '{npc_id}' updated successfully"}
                 
                 raise HTTPException(status_code=404, detail=f"NPC with ID '{npc_id}' not found")
             except HTTPException:
@@ -1105,11 +1106,10 @@ class NPCEngineAPI:
                 npc_config = config_loader.load_npc_config()
                 
                 # Remove NPC
-                original_count = len(npc_config.npcs)
-                npc_config.npcs = [npc for npc in npc_config.npcs if npc.npc_id != npc_id]
-                
-                if len(npc_config.npcs) == original_count:
+                if npc_id not in npc_config.instances:
                     raise HTTPException(status_code=404, detail=f"NPC with ID '{npc_id}' not found")
+                
+                del npc_config.instances[npc_id]
                 
                 config_loader.save_npc_config(npc_config)
                 return {"message": f"NPC '{npc_id}' deleted successfully"}
@@ -1131,19 +1131,19 @@ class NPCEngineAPI:
                 for npc in npcs:
                     try:
                         # Check if NPC ID already exists
-                        if any(existing_npc.npc_id == npc.npc_id for existing_npc in npc_config.npcs):
-                            errors.append(f"NPC with ID '{npc.npc_id}' already exists")
+                        if npc.id in npc_config.instances:
+                            errors.append(f"NPC with ID '{npc.id}' already exists")
                             continue
                         
                         # Validate schema exists
-                        if not any(s.schema_id == npc.schema_id for s in npc_config.schemas):
-                            errors.append(f"NPC '{npc.npc_id}': Schema '{npc.schema_id}' not found")
+                        if npc.schema_id not in npc_config.schemas:
+                            errors.append(f"NPC '{npc.id}': Schema '{npc.schema_id}' not found")
                             continue
                         
-                        npc_config.npcs.append(npc)
+                        npc_config.instances[npc.id] = npc
                         added_count += 1
                     except Exception as e:
-                        errors.append(f"NPC '{npc.npc_id}': {str(e)}")
+                        errors.append(f"NPC '{npc.id}': {str(e)}")
                 
                 if added_count > 0:
                     config_loader.save_npc_config(npc_config)
@@ -1168,13 +1168,12 @@ class NPCEngineAPI:
                 config_loader = ConfigLoader()
                 npc_config = config_loader.load_npc_config()
                 
-                # If no specific NPC IDs provided, spawn all enabled NPCs
-                npcs_to_spawn = npc_config.npcs
+                # If no specific NPC IDs provided, spawn all NPCs
+                npcs_to_spawn = list(npc_config.instances.values())
                 if npc_ids:
-                    npcs_to_spawn = [npc for npc in npc_config.npcs if npc.npc_id in npc_ids]
+                    npcs_to_spawn = [npc for npc in npc_config.instances.values() if npc.id in npc_ids]
                 
-                # Filter only enabled NPCs
-                npcs_to_spawn = [npc for npc in npcs_to_spawn if npc.enabled]
+                # Use all NPCs (no enabled filter for now)
                 
                 spawned_count = 0
                 errors = []
@@ -1182,34 +1181,31 @@ class NPCEngineAPI:
                 for npc_instance in npcs_to_spawn:
                     try:
                         # Find the schema for this NPC
-                        schema = next((s for s in npc_config.schemas if s.schema_id == npc_instance.schema_id), None)
+                        schema = npc_config.schemas.get(npc_instance.schema_id)
                         if not schema:
-                            errors.append(f"Schema '{npc_instance.schema_id}' not found for NPC '{npc_instance.npc_id}'")
+                            errors.append(f"Schema '{npc_instance.schema_id}' not found for NPC '{npc_instance.id}'")
                             continue
                         
                         # Create NPC agent with properties from configuration
                         npc_agent = NPCAgent(
-                            npc_id=npc_instance.npc_id,
+                            npc_id=npc_instance.id,
                             name=npc_instance.name,
-                            personality=npc_instance.personality,
-                            background=npc_instance.properties.get("backstory", ""),
-                            initial_location=npc_instance.location
+                            personality=npc_instance.properties.get("personality_traits", ["friendly"]),
+                            background=npc_instance.properties.get("background", npc_instance.description),
+                            initial_location=npc_instance.properties.get("location", "village_center")
                         )
                         
                         # Set additional properties
                         for prop_name, prop_value in npc_instance.properties.items():
-                            setattr(npc_agent, prop_name, prop_value)
-                        
-                        # Set stats
-                        for stat_name, stat_value in npc_instance.stats.items():
-                            setattr(npc_agent, stat_name, stat_value)
+                            if hasattr(npc_agent, prop_name):
+                                setattr(npc_agent, prop_name, prop_value)
                         
                         # Add to session
-                        session.npcs[npc_instance.npc_id] = npc_agent
+                        session.npcs[npc_instance.id] = npc_agent
                         spawned_count += 1
                         
                     except Exception as e:
-                        errors.append(f"NPC '{npc_instance.npc_id}': {str(e)}")
+                        errors.append(f"NPC '{npc_instance.id}': {str(e)}")
                 
                 return {
                     "message": f"Spawned {spawned_count} NPCs in session '{session_id}'",

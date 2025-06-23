@@ -36,7 +36,7 @@ def build_frontend():
         
         # Install dependencies
         print("📦 Installing frontend dependencies...")
-        subprocess.run(["npm", "ci", "--only=production"], check=True)
+        subprocess.run(["npm", "ci"], check=True)
         
         # Build for production
         print("🔨 Building frontend...")
@@ -58,11 +58,13 @@ def build_frontend():
 def main():
     """Main production server startup"""
     
-    # Get port from environment (Render sets this)
-    port = int(os.getenv("PORT", 8000))
+    # Get port from environment (Render sets this to 10000 by default)
+    port = int(os.getenv("PORT", 10000))
     host = "0.0.0.0"
     
     print(f"🚀 Starting NPC Engine Production Server on {host}:{port}")
+    print(f"📍 PORT environment variable: {os.getenv('PORT', 'not set')}")
+    print(f"📍 Binding to host: {host}, port: {port}")
     
     # Check for required environment variables
     if not os.getenv("GOOGLE_API_KEY"):
@@ -87,14 +89,21 @@ def main():
     print(f"🎨 Frontend: http://localhost:{port}/")
     
     # Start the server
-    uvicorn.run(
-        "npc_engine.api.npc_api:api.app",
-        host=host,
-        port=port,
-        reload=False,  # Disable reload in production
-        log_level="info",
-        access_log=True
-    )
+    print(f"🌐 Starting uvicorn server...")
+    print(f"🔗 Will be accessible at: http://{host}:{port}")
+    
+    try:
+        uvicorn.run(
+            "npc_engine.api.npc_api:api.app",
+            host=host,
+            port=port,
+            reload=False,  # Disable reload in production
+            log_level="info",
+            access_log=True
+        )
+    except Exception as e:
+        print(f"❌ Failed to start server: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main() 

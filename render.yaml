@@ -7,10 +7,8 @@ services:
     buildCommand: ./build.sh
     startCommand: python3 render_start.py
     envVars:
-      - key: GOOGLE_API_KEY
+            - key: GOOGLE_API_KEY
         sync: false
-      - key: PORT
-        value: 10000
       - key: PYTHON_VERSION
         value: 3.11.0
     healthCheckPath: /health 

@@ -90,8 +90,9 @@ https://your-app-name.onrender.com/
 ### Common Issues:
 
 1. **"No open ports detected"**:
-   - ✅ Fixed: `render_start.py` uses `PORT` environment variable
-   - ✅ Fixed: Server binds to `0.0.0.0:$PORT`
+   - ✅ Fixed: `render_start.py` uses `PORT` environment variable (default: 10000)
+   - ✅ Fixed: Server binds to `0.0.0.0:$PORT` as required by Render
+   - ✅ Fixed: uvicorn explicitly configured for Render's port binding requirements
 
 2. **Frontend not loading**:
    - Check build logs for frontend build errors

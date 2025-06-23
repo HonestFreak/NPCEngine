@@ -204,7 +204,9 @@ const Dashboard: React.FC = () => {
     }
 
     try {
+      console.log(`🔍 Loading NPCs for session: ${sessionId}`)
       const response = await axios.get(`${API_BASE}/sessions/${sessionId}/npcs`)
+      console.log('📡 NPCs API response:', response.data)
       
       // Convert the NPCs object to array format with proper naming
       const npcArray = Object.entries(response.data.npcs || {}).map(([id, data]: [string, any]) => ({
@@ -213,9 +215,10 @@ const Dashboard: React.FC = () => {
         status: data
       }))
       
+      console.log('🎭 Converted NPC array:', npcArray)
       setSessionNPCs(npcArray)
     } catch (err) {
-      console.error('Error loading session NPCs:', err)
+      console.error('❌ Error loading session NPCs:', err)
       setSessionNPCs([])
     }
   }
@@ -264,8 +267,12 @@ const Dashboard: React.FC = () => {
 
   // Load NPCs when session changes
   useEffect(() => {
+    console.log(`🔄 Session changed to: ${eventForm.session_id}`)
     if (eventForm.session_id) {
       loadSessionNPCs(eventForm.session_id)
+    } else {
+      console.log('📭 No session selected, clearing NPCs')
+      setSessionNPCs([])
     }
   }, [eventForm.session_id])
 

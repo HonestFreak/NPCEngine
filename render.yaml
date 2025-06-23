@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: npc-engine-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python render_start.py
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: ENVIRONMENT
+        value: production 

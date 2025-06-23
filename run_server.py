@@ -29,14 +29,11 @@ def main():
     print("🔍 Health check available at: http://localhost:8000/health")
     print("🎯 NPC Engine API available at: http://localhost:8000/api/v1/")
     
-    # Get port from environment (useful for cloud deployments)
-    port = int(os.getenv("PORT", 8000))
-    
     # Start the server
     uvicorn.run(
         "npc_engine.api.npc_api:api.app",
         host="0.0.0.0",
-        port=port,
+        port=8000,
         reload=True,
         log_level="info"
     )

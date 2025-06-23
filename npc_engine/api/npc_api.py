@@ -118,8 +118,19 @@ class NPCEngineAPI:
             allow_headers=["*"],
         )
         
+
         # Add routes
         self._add_routes(app)
+        
+        # Mount static files AFTER API routes to avoid conflicts
+        try:
+            from pathlib import Path
+            static_dir = Path(__file__).parent.parent.parent / "web-gui" / "dist"
+            if static_dir.exists():
+                app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
+                print(f"📁 Serving static files from: {static_dir}")
+        except Exception as e:
+            print(f"⚠️  Could not mount static files: {e}")
         
         return app
     

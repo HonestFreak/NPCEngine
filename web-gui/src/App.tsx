@@ -85,7 +85,6 @@ function App() {
       <footer className="mt-12 py-6 text-center text-gray-600 dark:text-gray-400">
         <p className="text-sm">
           Built with ❤️ using Google Agent Development Kit • 
-                          <span className="text-blue-600 dark:text-blue-400 ml-1">Production Ready</span>
         </p>
       </footer>
       </div>

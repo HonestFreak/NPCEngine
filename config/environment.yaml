@@ -1,0 +1,18 @@
+default_time: morning
+default_weather: sunny
+description: ''
+environmental_rules: {}
+locations: []
+name: Custom Game World
+scheduled_events: []
+time_progression_rate: 1.0
+version: '1.0'
+weather_change_frequency: 0.1
+weather_patterns: []
+world_properties:
+  difficulty: 5
+  location_market: Bustling marketplace with various vendors
+  location_tavern: A cozy tavern with warm lighting
+  magic_enabled: true
+  time_of_day: afternoon
+  weather: sunny

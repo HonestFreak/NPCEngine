@@ -1,0 +1,1121 @@
+schemas:
+  generic_villager:
+    schema_id: generic_villager
+    name: Generic Villager
+    description: A basic villager template suitable for most common NPCs
+    core_properties:
+      id:
+        type: string
+        required: true
+        description: Unique identifier for the NPC
+      name:
+        type: string
+        required: true
+        description: Display name of the NPC
+      description:
+        type: string
+        required: true
+        description: Brief description of the NPC
+    custom_properties: []
+    example_properties:
+    - name: job
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: The NPC's profession or role
+      default_value: Villager
+      required: false
+      choices:
+      - Villager
+      - Merchant
+      - Guard
+      - Blacksmith
+      - Mage
+      - Healer
+      - Scholar
+      - Farmer
+      - Noble
+      - Thief
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: age
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Age of the NPC in years
+      default_value: 30
+      required: false
+      choices: null
+      min_value: 1
+      max_value: 200
+      min_length: null
+      max_length: null
+    - name: base_emotion
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: The NPC's default emotional state
+      default_value: neutral
+      required: false
+      choices:
+      - happy
+      - sad
+      - angry
+      - fearful
+      - surprised
+      - disgusted
+      - neutral
+      - excited
+      - calm
+      - anxious
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: personality_traits
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - list
+      description: List of personality traits
+      default_value:
+      - friendly
+      - helpful
+      required: false
+      choices:
+      - friendly
+      - hostile
+      - helpful
+      - selfish
+      - brave
+      - cowardly
+      - honest
+      - deceptive
+      - loyal
+      - treacherous
+      - calm
+      - aggressive
+      - wise
+      - foolish
+      - generous
+      - greedy
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: health
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Current health points
+      default_value: 100
+      required: false
+      choices: null
+      min_value: 0
+      max_value: 200
+      min_length: null
+      max_length: null
+    - name: energy
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Current energy level
+      default_value: 100
+      required: false
+      choices: null
+      min_value: 0
+      max_value: 100
+      min_length: null
+      max_length: null
+    - name: wealth
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Amount of gold/currency the NPC has
+      default_value: 50
+      required: false
+      choices: null
+      min_value: 0
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: location
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: Current location of the NPC
+      default_value: Village Square
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: skills
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - dict
+      description: NPC's skills and their levels
+      default_value:
+        combat: 5
+        crafting: 3
+        social: 7
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: inventory
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - list
+      description: Items the NPC is carrying
+      default_value:
+      - Basic Clothes
+      - Small Pouch
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: dialogue_style
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: How the NPC speaks
+      default_value: formal
+      required: false
+      choices:
+      - formal
+      - casual
+      - rustic
+      - scholarly
+      - poetic
+      - blunt
+      - mysterious
+      - cheerful
+      - grumpy
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: active
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - boolean
+      description: Whether the NPC is currently active in the world
+      default_value: true
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+  merchant:
+    schema_id: merchant
+    name: Merchant
+    description: A trader who buys and sells goods
+    core_properties:
+      id:
+        type: string
+        required: true
+        description: Unique identifier for the NPC
+      name:
+        type: string
+        required: true
+        description: Display name of the NPC
+      description:
+        type: string
+        required: true
+        description: Brief description of the NPC
+    custom_properties:
+    - name: shop_type
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: Type of shop the merchant runs
+      default_value: general
+      required: false
+      choices:
+      - general
+      - weapons
+      - armor
+      - potions
+      - books
+      - food
+      - jewelry
+      - magical
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: trade_routes
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - list
+      description: Cities and locations the merchant trades with
+      default_value:
+      - Nearby Town
+      - Capital City
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: reputation
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - float
+      description: Trading reputation (0.0 to 1.0)
+      default_value: 0.7
+      required: false
+      choices: null
+      min_value: 0
+      max_value: 1
+      min_length: null
+      max_length: null
+    example_properties:
+    - name: age
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Age of the NPC in years
+      default_value: 30
+      required: false
+      choices: null
+      min_value: 1
+      max_value: 200
+      min_length: null
+      max_length: null
+    - name: base_emotion
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: The NPC's default emotional state
+      default_value: neutral
+      required: false
+      choices:
+      - happy
+      - sad
+      - angry
+      - fearful
+      - surprised
+      - disgusted
+      - neutral
+      - excited
+      - calm
+      - anxious
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: personality_traits
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - list
+      description: List of personality traits
+      default_value:
+      - friendly
+      - helpful
+      required: false
+      choices:
+      - friendly
+      - hostile
+      - helpful
+      - selfish
+      - brave
+      - cowardly
+      - honest
+      - deceptive
+      - loyal
+      - treacherous
+      - calm
+      - aggressive
+      - wise
+      - foolish
+      - generous
+      - greedy
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: health
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Current health points
+      default_value: 100
+      required: false
+      choices: null
+      min_value: 0
+      max_value: 200
+      min_length: null
+      max_length: null
+    - name: energy
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Current energy level
+      default_value: 100
+      required: false
+      choices: null
+      min_value: 0
+      max_value: 100
+      min_length: null
+      max_length: null
+    - name: wealth
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Amount of gold/currency the NPC has
+      default_value: 50
+      required: false
+      choices: null
+      min_value: 0
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: location
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: Current location of the NPC
+      default_value: Village Square
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: skills
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - dict
+      description: NPC's skills and their levels
+      default_value:
+        combat: 5
+        crafting: 3
+        social: 7
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: inventory
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - list
+      description: Items the NPC is carrying
+      default_value:
+      - Basic Clothes
+      - Small Pouch
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: dialogue_style
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: How the NPC speaks
+      default_value: formal
+      required: false
+      choices:
+      - formal
+      - casual
+      - rustic
+      - scholarly
+      - poetic
+      - blunt
+      - mysterious
+      - cheerful
+      - grumpy
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: active
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - boolean
+      description: Whether the NPC is currently active in the world
+      default_value: true
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: job
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: The NPC's profession or role
+      default_value: Merchant
+      required: true
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: wealth
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Amount of gold/currency the NPC has
+      default_value: 500
+      required: false
+      choices: null
+      min_value: 0
+      max_value: null
+      min_length: null
+      max_length: null
+  guard:
+    schema_id: guard
+    name: Guard
+    description: A protective warrior who maintains order
+    core_properties:
+      id:
+        type: string
+        required: true
+        description: Unique identifier for the NPC
+      name:
+        type: string
+        required: true
+        description: Display name of the NPC
+      description:
+        type: string
+        required: true
+        description: Brief description of the NPC
+    custom_properties:
+    - name: patrol_area
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: Area the guard is responsible for patrolling
+      default_value: Main Gate
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: authority_level
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Level of authority (1-10)
+      default_value: 5
+      required: false
+      choices: null
+      min_value: 1
+      max_value: 10
+      min_length: null
+      max_length: null
+    - name: equipment
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - list
+      description: Guard's equipment and weapons
+      default_value:
+      - Iron Sword
+      - Leather Armor
+      - Shield
+      - Whistle
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    example_properties:
+    - name: age
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Age of the NPC in years
+      default_value: 30
+      required: false
+      choices: null
+      min_value: 1
+      max_value: 200
+      min_length: null
+      max_length: null
+    - name: base_emotion
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: The NPC's default emotional state
+      default_value: neutral
+      required: false
+      choices:
+      - happy
+      - sad
+      - angry
+      - fearful
+      - surprised
+      - disgusted
+      - neutral
+      - excited
+      - calm
+      - anxious
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: personality_traits
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - list
+      description: List of personality traits
+      default_value:
+      - friendly
+      - helpful
+      required: false
+      choices:
+      - friendly
+      - hostile
+      - helpful
+      - selfish
+      - brave
+      - cowardly
+      - honest
+      - deceptive
+      - loyal
+      - treacherous
+      - calm
+      - aggressive
+      - wise
+      - foolish
+      - generous
+      - greedy
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: energy
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Current energy level
+      default_value: 100
+      required: false
+      choices: null
+      min_value: 0
+      max_value: 100
+      min_length: null
+      max_length: null
+    - name: wealth
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Amount of gold/currency the NPC has
+      default_value: 50
+      required: false
+      choices: null
+      min_value: 0
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: location
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: Current location of the NPC
+      default_value: Village Square
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: skills
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - dict
+      description: NPC's skills and their levels
+      default_value:
+        combat: 5
+        crafting: 3
+        social: 7
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: inventory
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - list
+      description: Items the NPC is carrying
+      default_value:
+      - Basic Clothes
+      - Small Pouch
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: dialogue_style
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: How the NPC speaks
+      default_value: formal
+      required: false
+      choices:
+      - formal
+      - casual
+      - rustic
+      - scholarly
+      - poetic
+      - blunt
+      - mysterious
+      - cheerful
+      - grumpy
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: active
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - boolean
+      description: Whether the NPC is currently active in the world
+      default_value: true
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: job
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: The NPC's profession or role
+      default_value: Guard
+      required: true
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: health
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Current health points
+      default_value: 150
+      required: false
+      choices: null
+      min_value: 0
+      max_value: 200
+      min_length: null
+      max_length: null
+  mage:
+    schema_id: mage
+    name: Mage
+    description: A practitioner of magical arts
+    core_properties:
+      id:
+        type: string
+        required: true
+        description: Unique identifier for the NPC
+      name:
+        type: string
+        required: true
+        description: Display name of the NPC
+      description:
+        type: string
+        required: true
+        description: Brief description of the NPC
+    custom_properties:
+    - name: magic_school
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: School of magic the mage specializes in
+      default_value: elemental
+      required: false
+      choices:
+      - elemental
+      - healing
+      - illusion
+      - necromancy
+      - divination
+      - transmutation
+      - enchantment
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: spell_list
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - list
+      description: Spells the mage knows
+      default_value:
+      - Fireball
+      - Heal
+      - Magic Missile
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: mana
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Current mana points
+      default_value: 100
+      required: false
+      choices: null
+      min_value: 0
+      max_value: 200
+      min_length: null
+      max_length: null
+    - name: magical_focus
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: Magical item used to channel magic
+      default_value: Wooden Staff
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    example_properties:
+    - name: age
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Age of the NPC in years
+      default_value: 30
+      required: false
+      choices: null
+      min_value: 1
+      max_value: 200
+      min_length: null
+      max_length: null
+    - name: base_emotion
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: The NPC's default emotional state
+      default_value: neutral
+      required: false
+      choices:
+      - happy
+      - sad
+      - angry
+      - fearful
+      - surprised
+      - disgusted
+      - neutral
+      - excited
+      - calm
+      - anxious
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: personality_traits
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - list
+      description: List of personality traits
+      default_value:
+      - friendly
+      - helpful
+      required: false
+      choices:
+      - friendly
+      - hostile
+      - helpful
+      - selfish
+      - brave
+      - cowardly
+      - honest
+      - deceptive
+      - loyal
+      - treacherous
+      - calm
+      - aggressive
+      - wise
+      - foolish
+      - generous
+      - greedy
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: health
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Current health points
+      default_value: 100
+      required: false
+      choices: null
+      min_value: 0
+      max_value: 200
+      min_length: null
+      max_length: null
+    - name: energy
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Current energy level
+      default_value: 100
+      required: false
+      choices: null
+      min_value: 0
+      max_value: 100
+      min_length: null
+      max_length: null
+    - name: wealth
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - integer
+      description: Amount of gold/currency the NPC has
+      default_value: 50
+      required: false
+      choices: null
+      min_value: 0
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: location
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: Current location of the NPC
+      default_value: Village Square
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: inventory
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - list
+      description: Items the NPC is carrying
+      default_value:
+      - Basic Clothes
+      - Small Pouch
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: dialogue_style
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: How the NPC speaks
+      default_value: formal
+      required: false
+      choices:
+      - formal
+      - casual
+      - rustic
+      - scholarly
+      - poetic
+      - blunt
+      - mysterious
+      - cheerful
+      - grumpy
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: active
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - boolean
+      description: Whether the NPC is currently active in the world
+      default_value: true
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: job
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - string
+      description: The NPC's profession or role
+      default_value: Mage
+      required: true
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+    - name: skills
+      type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+      - dict
+      description: NPC's skills and their levels
+      default_value:
+        combat: 3
+        magic: 9
+        social: 6
+        knowledge: 8
+      required: false
+      choices: null
+      min_value: null
+      max_value: null
+      min_length: null
+      max_length: null
+instances:
+  npc_villager_001:
+    id: npc_villager_001
+    name: Martha the Baker
+    description: A kind baker who makes the best bread in the village
+    schema_id: generic_villager
+    properties:
+      job: Baker
+      age: 45
+      base_emotion: happy
+      personality_traits:
+      - friendly
+      - helpful
+      - generous
+      health: 80
+      energy: 90
+      wealth: 120
+      location: Bakery
+      skills:
+        combat: 2
+        crafting: 8
+        social: 9
+        cooking: 10
+      inventory:
+      - Apron
+      - Flour
+      - Fresh Bread
+      - Rolling Pin
+      dialogue_style: cheerful
+      active: true
+    relationships: []
+    session_data: {}
+    created_at: '2025-06-23T00:34:45.347365'
+    last_updated: '2025-06-23T00:34:45.347372'
+  npc_merchant_001:
+    id: npc_merchant_001
+    name: Gareth the Trader
+    description: A well-traveled merchant with exotic goods from distant lands
+    schema_id: merchant
+    properties:
+      job: Merchant
+      age: 38
+      base_emotion: neutral
+      personality_traits:
+      - shrewd
+      - honest
+      - worldly
+      health: 100
+      energy: 85
+      wealth: 750
+      location: Market Square
+      skills:
+        combat: 4
+        social: 9
+        trading: 10
+        appraisal: 8
+      inventory:
+      - Ledger
+      - Scales
+      - Exotic Spices
+      - Silk Cloth
+      - Gems
+      dialogue_style: formal
+      active: true
+      shop_type: general
+      trade_routes:
+      - Capital City
+      - Port Town
+      - Mountain Settlement
+      reputation: 0.85
+    relationships: []
+    session_data: {}
+    created_at: '2025-06-23T00:34:45.347379'
+    last_updated: '2025-06-23T00:34:45.347380'
+  npc_guard_001:
+    id: npc_guard_001
+    name: Captain Roderick
+    description: A veteran guard captain who has protected the village for over a
+      decade
+    schema_id: guard
+    properties:
+      job: Guard
+      age: 42
+      base_emotion: calm
+      personality_traits:
+      - loyal
+      - brave
+      - disciplined
+      - protective
+      health: 160
+      energy: 95
+      wealth: 200
+      location: Village Gate
+      skills:
+        combat: 9
+        leadership: 8
+        social: 6
+        tactics: 7
+      inventory:
+      - Steel Sword
+      - Chain Mail
+      - Tower Shield
+      - Horn
+      - Badge of Office
+      dialogue_style: formal
+      active: true
+      patrol_area: Village Perimeter
+      authority_level: 8
+      equipment:
+      - Steel Sword
+      - Chain Mail
+      - Tower Shield
+      - Horn
+      - Badge of Office
+    relationships:
+    - npc_id: npc_villager_001
+      relationship_type: protector
+      description: Protects Martha and other villagers
+      strength: 0.7
+    session_data: {}
+    created_at: '2025-06-23T00:34:45.347397'
+    last_updated: '2025-06-23T00:34:45.347399'
+  npc_mage_001:
+    id: npc_mage_001
+    name: Eldara the Wise
+    description: An ancient mage who serves as the village's magical advisor and healer
+    schema_id: mage
+    properties:
+      job: Mage
+      age: 127
+      base_emotion: calm
+      personality_traits:
+      - wise
+      - patient
+      - mysterious
+      - helpful
+      health: 90
+      energy: 70
+      wealth: 300
+      location: Mage Tower
+      skills:
+        combat: 4
+        magic: 10
+        social: 7
+        knowledge: 10
+        alchemy: 9
+      inventory:
+      - Crystal Staff
+      - Spell Components
+      - Ancient Tome
+      - Healing Potions
+      dialogue_style: scholarly
+      active: true
+      magic_school: healing
+      spell_list:
+      - Greater Heal
+      - Purify
+      - Light
+      - Dispel Magic
+      - Scrying
+      mana: 180
+      magical_focus: Crystal Staff of Healing
+    relationships:
+    - npc_id: npc_guard_001
+      relationship_type: advisor
+      description: Provides magical counsel to the guard captain
+      strength: 0.6
+    - npc_id: npc_villager_001
+      relationship_type: healer
+      description: Provides healing services to the baker when needed
+      strength: 0.5
+    session_data: {}
+    created_at: '2025-06-23T00:34:45.347407'
+    last_updated: '2025-06-23T00:34:45.347408'
+  npc_99:
+    id: npc_99
+    name: Alex
+    description: A random passerby who is a banker
+    schema_id: generic_villager
+    properties:
+      job: banker
+      age: 24
+      base_emotion: scared
+      personality_traits: hostile, coward, deceptive
+      health: 23
+      energy: 1
+      wealth: 23
+      active: true
+    relationships: []
+    session_data: {}
+    created_at: '2025-06-22T19:04:48.739Z'
+    last_updated: '2025-06-22T19:04:48.739Z'

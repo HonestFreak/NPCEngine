@@ -1,0 +1,908 @@
+version: '1.0'
+schemas:
+- schema_id: generic_villager
+  name: Generic Villager
+  description: A basic villager template suitable for most common NPCs
+  base_properties:
+  - name: age
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 25
+    description: Age of the NPC
+    validation:
+      min: 1
+      max: 1000
+  - name: gender
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: neutral
+    description: Gender identity
+    validation:
+      choices:
+      - male
+      - female
+      - neutral
+      - other
+  - name: occupation
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: villager
+    description: Job or role in the world
+    validation: {}
+  - name: backstory
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: ''
+    description: Character background story
+    validation: {}
+  custom_properties: []
+  default_personality_traits:
+    openness: 0.5
+    conscientiousness: 0.6
+    extraversion: 0.4
+    agreeableness: 0.7
+    neuroticism: 0.3
+  default_stats:
+    health: 100
+    energy: 100
+    mood: 0.5
+    reputation: 0.0
+  appearance_properties:
+  - name: height
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: average
+    description: Physical height
+    validation:
+      choices:
+      - very_short
+      - short
+      - average
+      - tall
+      - very_tall
+  - name: build
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: average
+    description: Body build
+    validation:
+      choices:
+      - slim
+      - average
+      - muscular
+      - heavy
+  - name: hair_color
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: brown
+    description: Hair color
+    validation: {}
+  - name: eye_color
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: brown
+    description: Eye color
+    validation: {}
+  - name: clothing_style
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: casual
+    description: Preferred clothing style
+    validation: {}
+  behavior_properties:
+  - name: aggression_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 3
+    description: How aggressive the NPC is (1-10)
+    validation:
+      min: 1
+      max: 10
+  - name: social_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 5
+    description: How social the NPC is (1-10)
+    validation:
+      min: 1
+      max: 10
+  - name: curiosity_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 5
+    description: How curious the NPC is (1-10)
+    validation:
+      min: 1
+      max: 10
+  - name: loyalty_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 5
+    description: How loyal the NPC is (1-10)
+    validation:
+      min: 1
+      max: 10
+- schema_id: merchant
+  name: Merchant
+  description: A trader or shopkeeper with commerce-related properties
+  base_properties:
+  - name: age
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 25
+    description: Age of the NPC
+    validation:
+      min: 1
+      max: 1000
+  - name: gender
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: neutral
+    description: Gender identity
+    validation:
+      choices:
+      - male
+      - female
+      - neutral
+      - other
+  - name: occupation
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: villager
+    description: Job or role in the world
+    validation: {}
+  - name: backstory
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: ''
+    description: Character background story
+    validation: {}
+  custom_properties:
+  - name: shop_type
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: true
+    default: general
+    description: Type of shop they run
+    validation:
+      choices:
+      - general
+      - weapons
+      - armor
+      - magic
+      - food
+      - crafting
+  - name: haggle_skill
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 5
+    description: Skill at negotiating prices (1-10)
+    validation:
+      min: 1
+      max: 10
+  - name: inventory_size
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 20
+    description: Number of items they can stock
+    validation:
+      min: 1
+      max: 100
+  - name: wealth_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: moderate
+    description: How wealthy the merchant is
+    validation:
+      choices:
+      - poor
+      - modest
+      - moderate
+      - wealthy
+      - rich
+  default_personality_traits:
+    openness: 0.6
+    conscientiousness: 0.8
+    extraversion: 0.7
+    agreeableness: 0.6
+    neuroticism: 0.2
+  default_stats:
+    health: 100
+    energy: 100
+    mood: 0.6
+    reputation: 0.2
+    gold: 500
+  appearance_properties:
+  - name: height
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: average
+    description: Physical height
+    validation:
+      choices:
+      - very_short
+      - short
+      - average
+      - tall
+      - very_tall
+  - name: build
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: average
+    description: Body build
+    validation:
+      choices:
+      - slim
+      - average
+      - muscular
+      - heavy
+  - name: hair_color
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: brown
+    description: Hair color
+    validation: {}
+  - name: eye_color
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: brown
+    description: Eye color
+    validation: {}
+  - name: clothing_style
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: casual
+    description: Preferred clothing style
+    validation: {}
+  behavior_properties:
+  - name: aggression_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 3
+    description: How aggressive the NPC is (1-10)
+    validation:
+      min: 1
+      max: 10
+  - name: social_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 5
+    description: How social the NPC is (1-10)
+    validation:
+      min: 1
+      max: 10
+  - name: curiosity_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 5
+    description: How curious the NPC is (1-10)
+    validation:
+      min: 1
+      max: 10
+  - name: loyalty_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 5
+    description: How loyal the NPC is (1-10)
+    validation:
+      min: 1
+      max: 10
+- schema_id: guard
+  name: Guard
+  description: A security guard or city watch member
+  base_properties:
+  - name: age
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 25
+    description: Age of the NPC
+    validation:
+      min: 1
+      max: 1000
+  - name: gender
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: neutral
+    description: Gender identity
+    validation:
+      choices:
+      - male
+      - female
+      - neutral
+      - other
+  - name: occupation
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: villager
+    description: Job or role in the world
+    validation: {}
+  - name: backstory
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: ''
+    description: Character background story
+    validation: {}
+  custom_properties:
+  - name: patrol_route
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - list
+    required: false
+    default:
+    - town_square
+    - main_gate
+    description: Locations they patrol
+    validation: {}
+  - name: authority_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 5
+    description: Level of authority (1-10)
+    validation:
+      min: 1
+      max: 10
+  - name: combat_skill
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 7
+    description: Combat effectiveness (1-10)
+    validation:
+      min: 1
+      max: 10
+  - name: weapon_type
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: sword
+    description: Preferred weapon type
+    validation:
+      choices:
+      - sword
+      - spear
+      - bow
+      - crossbow
+      - staff
+      - unarmed
+  default_personality_traits:
+    openness: 0.3
+    conscientiousness: 0.9
+    extraversion: 0.5
+    agreeableness: 0.4
+    neuroticism: 0.2
+  default_stats:
+    health: 150
+    energy: 120
+    mood: 0.4
+    reputation: 0.1
+    strength: 8
+    defense: 7
+  appearance_properties:
+  - name: height
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: average
+    description: Physical height
+    validation:
+      choices:
+      - very_short
+      - short
+      - average
+      - tall
+      - very_tall
+  - name: build
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: average
+    description: Body build
+    validation:
+      choices:
+      - slim
+      - average
+      - muscular
+      - heavy
+  - name: hair_color
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: brown
+    description: Hair color
+    validation: {}
+  - name: eye_color
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: brown
+    description: Eye color
+    validation: {}
+  - name: clothing_style
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: casual
+    description: Preferred clothing style
+    validation: {}
+  - name: armor_type
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: leather
+    description: Type of armor worn
+    validation:
+      choices:
+      - none
+      - leather
+      - chain
+      - plate
+      - magical
+  behavior_properties:
+  - name: aggression_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 3
+    description: How aggressive the NPC is (1-10)
+    validation:
+      min: 1
+      max: 10
+  - name: social_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 5
+    description: How social the NPC is (1-10)
+    validation:
+      min: 1
+      max: 10
+  - name: curiosity_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 5
+    description: How curious the NPC is (1-10)
+    validation:
+      min: 1
+      max: 10
+  - name: loyalty_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 5
+    description: How loyal the NPC is (1-10)
+    validation:
+      min: 1
+      max: 10
+- schema_id: mage
+  name: Mage
+  description: A magic user with spell-casting abilities
+  base_properties:
+  - name: age
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 25
+    description: Age of the NPC
+    validation:
+      min: 1
+      max: 1000
+  - name: gender
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: neutral
+    description: Gender identity
+    validation:
+      choices:
+      - male
+      - female
+      - neutral
+      - other
+  - name: occupation
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: villager
+    description: Job or role in the world
+    validation: {}
+  - name: backstory
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: ''
+    description: Character background story
+    validation: {}
+  custom_properties:
+  - name: magic_school
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: general
+    description: School of magic they specialize in
+    validation:
+      choices:
+      - general
+      - fire
+      - water
+      - earth
+      - air
+      - light
+      - dark
+      - healing
+  - name: spell_power
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 5
+    description: Magical power level (1-10)
+    validation:
+      min: 1
+      max: 10
+  - name: mana_capacity
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 100
+    description: Maximum mana points
+    validation:
+      min: 10
+      max: 1000
+  - name: known_spells
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - list
+    required: false
+    default:
+    - magic_missile
+    - heal
+    - light
+    description: List of spells they know
+    validation: {}
+  default_personality_traits:
+    openness: 0.9
+    conscientiousness: 0.7
+    extraversion: 0.3
+    agreeableness: 0.5
+    neuroticism: 0.4
+  default_stats:
+    health: 80
+    energy: 100
+    mood: 0.5
+    reputation: 0.3
+    intelligence: 9
+    wisdom: 8
+    mana: 100
+  appearance_properties:
+  - name: height
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: average
+    description: Physical height
+    validation:
+      choices:
+      - very_short
+      - short
+      - average
+      - tall
+      - very_tall
+  - name: build
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: average
+    description: Body build
+    validation:
+      choices:
+      - slim
+      - average
+      - muscular
+      - heavy
+  - name: hair_color
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: brown
+    description: Hair color
+    validation: {}
+  - name: eye_color
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: brown
+    description: Eye color
+    validation: {}
+  - name: clothing_style
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: casual
+    description: Preferred clothing style
+    validation: {}
+  - name: robe_color
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: blue
+    description: Color of their magical robes
+    validation: {}
+  - name: staff_type
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - string
+    required: false
+    default: wooden
+    description: Type of magical staff
+    validation:
+      choices:
+      - none
+      - wooden
+      - crystal
+      - metal
+      - bone
+      - living_wood
+  behavior_properties:
+  - name: aggression_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 3
+    description: How aggressive the NPC is (1-10)
+    validation:
+      min: 1
+      max: 10
+  - name: social_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 5
+    description: How social the NPC is (1-10)
+    validation:
+      min: 1
+      max: 10
+  - name: curiosity_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 5
+    description: How curious the NPC is (1-10)
+    validation:
+      min: 1
+      max: 10
+  - name: loyalty_level
+    type: !!python/object/apply:npc_engine.config.npc_config.PropertyType
+    - integer
+    required: false
+    default: 5
+    description: How loyal the NPC is (1-10)
+    validation:
+      min: 1
+      max: 10
+npcs:
+- npc_id: npc_001
+  schema_id: merchant
+  name: Gareth the Trader
+  properties:
+    age: 45
+    gender: male
+    occupation: general merchant
+    backstory: A well-traveled trader who has seen many lands and collected interesting
+      wares.
+    shop_type: general
+    haggle_skill: 7
+    inventory_size: 30
+    wealth_level: moderate
+    height: average
+    build: average
+    hair_color: gray
+    eye_color: green
+    clothing_style: merchant_robes
+  personality:
+    openness: 0.7
+    conscientiousness: 0.8
+    extraversion: 0.8
+    agreeableness: 0.6
+    neuroticism: 0.1
+  stats:
+    health: 100
+    energy: 100
+    mood: 0.7
+    reputation: 0.3
+    gold: 750
+  location: market_square
+  enabled: true
+  tags:
+  - merchant
+  - friendly
+  - talkative
+- npc_id: npc_002
+  schema_id: guard
+  name: Captain Sarah
+  properties:
+    age: 32
+    gender: female
+    occupation: city guard captain
+    backstory: Rose through the ranks due to her dedication and combat prowess.
+    patrol_route:
+    - main_gate
+    - town_square
+    - barracks
+    authority_level: 8
+    combat_skill: 9
+    weapon_type: sword
+    armor_type: chain
+    height: tall
+    build: muscular
+    hair_color: black
+    eye_color: brown
+    clothing_style: guard_uniform
+  personality:
+    openness: 0.4
+    conscientiousness: 0.9
+    extraversion: 0.6
+    agreeableness: 0.5
+    neuroticism: 0.1
+  stats:
+    health: 150
+    energy: 120
+    mood: 0.5
+    reputation: 0.2
+    strength: 9
+    defense: 8
+  location: main_gate
+  enabled: true
+  tags:
+  - guard
+  - authority
+  - strong
+- npc_id: npc_003
+  schema_id: mage
+  name: Eldara the Wise
+  properties:
+    age: 78
+    gender: female
+    occupation: court mage
+    backstory: An ancient mage who has studied magic for decades and serves as advisor.
+    magic_school: light
+    spell_power: 9
+    mana_capacity: 200
+    known_spells:
+    - heal
+    - light
+    - dispel_magic
+    - teleport
+    - scrying
+    robe_color: white
+    staff_type: crystal
+    height: short
+    build: slim
+    hair_color: white
+    eye_color: blue
+    clothing_style: mage_robes
+  personality:
+    openness: 0.9
+    conscientiousness: 0.8
+    extraversion: 0.2
+    agreeableness: 0.7
+    neuroticism: 0.2
+  stats:
+    health: 80
+    energy: 100
+    mood: 0.6
+    reputation: 0.5
+    intelligence: 10
+    wisdom: 9
+    mana: 200
+  location: mage_tower
+  enabled: true
+  tags:
+  - mage
+  - wise
+  - helpful
+  - magical
+- npc_id: npc_004
+  schema_id: generic_villager
+  name: Tom the Farmer
+  properties:
+    age: 38
+    gender: male
+    occupation: farmer
+    backstory: A hardworking farmer who supplies food to the local community.
+    height: average
+    build: muscular
+    hair_color: brown
+    eye_color: green
+    clothing_style: work_clothes
+  personality:
+    openness: 0.3
+    conscientiousness: 0.8
+    extraversion: 0.4
+    agreeableness: 0.8
+    neuroticism: 0.2
+  stats:
+    health: 120
+    energy: 100
+    mood: 0.6
+    reputation: 0.1
+  location: farmland
+  enabled: true
+  tags:
+  - villager
+  - hardworking
+  - friendly
+- npc_id: npc_005
+  schema_id: generic_villager
+  name: Luna the Bard
+  properties:
+    age: 24
+    gender: female
+    occupation: traveling bard
+    backstory: A charismatic performer who travels from town to town sharing stories
+      and songs.
+    height: average
+    build: slim
+    hair_color: red
+    eye_color: hazel
+    clothing_style: colorful_performer
+  personality:
+    openness: 0.9
+    conscientiousness: 0.4
+    extraversion: 0.9
+    agreeableness: 0.7
+    neuroticism: 0.3
+  stats:
+    health: 90
+    energy: 100
+    mood: 0.8
+    reputation: 0.2
+  location: tavern
+  enabled: true
+  tags:
+  - performer
+  - charismatic
+  - artistic
+  - social
+global_settings:
+  max_npcs_per_session: 50
+  auto_spawn_enabled: true
+  npc_interaction_range: 10.0
+  memory_retention_days: 30
+  personality_drift_enabled: true
+  reputation_system_enabled: true
+spawn_rules:
+  default_location: town_square
+  spawn_on_session_start: true
+  respawn_on_death: false
+  spawn_delay_seconds: 0

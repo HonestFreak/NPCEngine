@@ -1,0 +1,77 @@
+default_time: morning
+default_weather: sunny
+description: A peaceful village with magical elements
+environmental_rules: {}
+locations:
+- available_actions:
+  - craft_sword
+  - speak
+  - examine
+  connected_locations:
+  - village_center
+  default_npcs:
+  - thorin_blacksmith
+  default_objects:
+  - id: anvil
+    interactable: true
+    name: Heavy Anvil
+  - id: forge
+    interactable: true
+    name: Blazing Forge
+  description: A busy blacksmith shop with the sound of hammering
+  lighting: normal
+  location_id: blacksmith_shop
+  location_type: building
+  name: Thorin's Blacksmith
+  noise_level: quiet
+  properties:
+    noise_level: loud
+    temperature: hot
+  temperature: normal
+- available_actions:
+  - cast_fireball
+  - study_magic
+  - speak
+  connected_locations:
+  - village_center
+  default_npcs:
+  - gandalf_wizard
+  default_objects: []
+  description: A tall tower filled with magical energy
+  lighting: normal
+  location_id: magic_tower
+  location_type: building
+  name: Wizard's Tower
+  noise_level: quiet
+  properties:
+    lighting: mystical
+    magical_aura: strong
+  temperature: normal
+name: Fantasy Village
+scheduled_events:
+- description: The village market opens for the day
+  event_name: daily_market
+  frequency: daily
+  npc_effects:
+    merchants:
+      mood_boost: 0.1
+  time_of_day: morning
+  world_effects:
+    market_active: true
+time_progression_rate: 1.0
+version: '1.0'
+weather_change_frequency: 0.1
+weather_patterns:
+- can_transition_to:
+  - sunny
+  - cloudy
+  description: A storm crackling with magical energy
+  mood_effects:
+    excitement: 0.2
+    fear: 0.1
+  movement_modifier: 0.8
+  name: Magical Storm
+  transition_probability: {}
+  visibility_modifier: 0.5
+  weather_id: magical_storm
+world_properties: {}

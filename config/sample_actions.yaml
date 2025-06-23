@@ -1,0 +1,82 @@
+action_categories:
+  crafting:
+  - craft_sword
+  - craft_armor
+  - craft_potion
+  magic:
+  - cast_fireball
+  - cast_heal
+  - cast_teleport
+  social:
+  - speak
+  - emote
+  - trade
+custom_actions:
+- action_id: craft_sword
+  affects_mood: false
+  cooldown: 60.0
+  creates_memory: true
+  description: Craft a sword using materials
+  energy_cost: 20.0
+  name: Craft Sword
+  properties:
+  - default: null
+    description: Material to use for crafting
+    name: material
+    required: true
+    type: !!python/object/apply:npc_engine.config.action_config.PropertyType
+    - string
+    validation:
+      choices:
+      - iron
+      - steel
+      - mithril
+  - default: none
+    description: Enchantment to apply
+    name: enchantment
+    required: false
+    type: !!python/object/apply:npc_engine.config.action_config.PropertyType
+    - string
+    validation: {}
+  requirements:
+    skill_level: 10
+    tools:
+    - hammer
+    - anvil
+  requires_target: true
+  target_type: !!python/object/apply:npc_engine.config.action_config.ActionTargetType
+  - object
+  visibility: public
+- action_id: cast_fireball
+  affects_mood: false
+  cooldown: 10.0
+  creates_memory: true
+  description: Cast a fireball spell
+  energy_cost: 15.0
+  name: Cast Fireball
+  properties:
+  - default: 5
+    description: Power level of the spell
+    name: power
+    required: false
+    type: !!python/object/apply:npc_engine.config.action_config.PropertyType
+    - integer
+    validation:
+      max: 10
+      min: 1
+  requirements:
+    mana: 30
+    spell_components:
+    - sulfur
+  requires_target: true
+  target_type: !!python/object/apply:npc_engine.config.action_config.ActionTargetType
+  - any
+  visibility: public
+enabled_default_actions:
+- speak
+- move
+- emote
+- interact
+- remember
+global_settings: {}
+version: '1.0'

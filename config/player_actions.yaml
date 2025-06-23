@@ -1,0 +1,68 @@
+enabled_default_player_actions:
+- inspect
+- use_item
+- attack
+- defend
+- run
+global_settings:
+  action_queue_size: 10
+  allow_custom_actions: true
+  max_actions_per_turn: 3
+player_actions:
+- action_id: player_cast_spell
+  affects_mood: true
+  category: player
+  cooldown: 3.0
+  cost:
+    mana: 25.0
+  creates_memory: true
+  description: Cast a magical spell
+  name: Cast Spell
+  properties:
+  - default: null
+    description: Type of spell
+    name: spell_type
+    required: true
+    type: string
+    validation:
+      options:
+      - fireball
+      - heal
+      - shield
+  requirements: {}
+  requires_target: true
+  target_type: any
+  visibility: public
+- action_id: player_use_item
+  affects_mood: false
+  category: player
+  cooldown: 1.0
+  cost: {}
+  creates_memory: true
+  description: Use an item from inventory
+  name: Use Item
+  properties:
+  - default: null
+    description: Name of the item to use
+    name: item_name
+    required: true
+    type: string
+    validation: {}
+  requirements: {}
+  requires_target: true
+  target_type: item
+  visibility: public
+- action_id: attack
+  affects_mood: false
+  category: player
+  cooldown: 0.0
+  cost: {}
+  creates_memory: true
+  description: attacks the player
+  name: attack
+  properties: []
+  requirements: {}
+  requires_target: true
+  target_type: npc
+  visibility: public
+version: '1.0'

@@ -34,6 +34,9 @@ This project demonstrates **sophisticated multi-agent workflows** that automate 
 - **Comprehensive validation** with Pydantic models
 - **Production-ready** error handling and logging
 
+![NPC Engine Diagram](./assets/simple_diagram.png)
+
+
 ## 📁 Project Structure
 
 ```
@@ -81,6 +84,9 @@ npc-engine/
 ├── 🎮 start_npc_engine.py       # Full-stack launcher
 └── 📋 requirements.txt          # Python dependencies
 ```
+
+![NPC Engine Diagram](./assets/chart1.png)
+
 
 ## 🚀 Setup & Installation
 
@@ -282,6 +288,8 @@ curl -X POST "http://localhost:8000/sessions/test_session/events" \
 ```
 
 🎉 **Congratulations!** Your NPC Engine is now running and ready for intelligent multi-agent interactions!
+
+![NPC Engine Diagram](./assets/chart2.png)
 
 ## 💾 Session Persistence
 

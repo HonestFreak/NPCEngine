@@ -14,10 +14,19 @@ jobs:
       with:
         fetch-depth: 0
     
-    - name: Run secret scanning
+    - name: Run TruffleHog secret scan
       uses: trufflesecurity/trufflehog@main
       with:
         path: ./
-        base: main
+        base: ${{ github.event.repository.default_branch }}
         head: HEAD
         extra_args: --debug --only-verified
+      continue-on-error: true
+      if: github.event_name == 'pull_request'
+    
+    - name: Run TruffleHog filesystem scan
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        extra_args: --debug --only-verified
+      if: github.event_name == 'push'

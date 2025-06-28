@@ -11,9 +11,9 @@
 
 </div>
 
-**The most sophisticated multi-agent NPC orchestration system built with Google Agent Development Kit (ADK)**
+**A multi-agent NPC framework built with Google Agent Development Kit (ADK)**
 
-Create intelligent, personality-driven NPCs with advanced AI capabilities, dynamic interactions, and production-ready architecture for games and interactive applications.
+Create intelligent, personality-driven NPCs with AI capabilities, dynamic interactions, and production-ready architecture for games and interactive applications.
 
 ## 🌟 Why NPCEngine?
 

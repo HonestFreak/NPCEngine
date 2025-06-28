@@ -959,8 +959,8 @@ instances:
       active: true
     relationships: []
     session_data: {}
-    created_at: '2025-06-28T14:23:25.471960'
-    last_updated: '2025-06-28T14:23:25.471966'
+    created_at: '2025-06-28T14:45:27.630047'
+    last_updated: '2025-06-28T14:45:27.630079'
   npc_merchant_001:
     id: npc_merchant_001
     name: Gareth the Trader
@@ -999,8 +999,8 @@ instances:
       reputation: 0.85
     relationships: []
     session_data: {}
-    created_at: '2025-06-28T14:23:25.471988'
-    last_updated: '2025-06-28T14:23:25.471991'
+    created_at: '2025-06-28T14:45:27.630088'
+    last_updated: '2025-06-28T14:45:27.630090'
   npc_guard_001:
     id: npc_guard_001
     name: Captain Roderick
@@ -1047,8 +1047,8 @@ instances:
       description: Protects Martha and other villagers
       strength: 0.7
     session_data: {}
-    created_at: '2025-06-28T14:23:25.472003'
-    last_updated: '2025-06-28T14:23:25.472004'
+    created_at: '2025-06-28T14:45:27.630130'
+    last_updated: '2025-06-28T14:45:27.630134'
   npc_mage_001:
     id: npc_mage_001
     name: Eldara the Wise
@@ -1099,5 +1099,5 @@ instances:
       description: Provides healing services to the baker when needed
       strength: 0.5
     session_data: {}
-    created_at: '2025-06-28T14:23:25.472012'
-    last_updated: '2025-06-28T14:23:25.472013'
+    created_at: '2025-06-28T14:45:27.630144'
+    last_updated: '2025-06-28T14:45:27.630145'

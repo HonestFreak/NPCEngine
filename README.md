@@ -240,6 +240,7 @@ if __name__ == "__main__":
 
 ### **Environment Configuration**
 
+#### **Backend Configuration**
 ```bash
 # Production settings
 export ENVIRONMENT=production
@@ -254,6 +255,26 @@ export GOOGLE_CLOUD_LOCATION="us-central1"
 export SECRET_KEY="your-secret-key"
 export ALLOWED_HOSTS="your-domain.com"
 ```
+
+#### **Frontend Configuration**
+When deploying frontend and backend separately (e.g., on Render.com), configure the frontend to connect to the correct backend URL:
+
+```bash
+# Frontend environment variable (set in your hosting platform)
+export VITE_API_BASE_URL="https://your-backend-url.onrender.com"
+
+# For local development with remote backend
+export VITE_API_BASE_URL="https://your-backend-url.onrender.com"
+```
+
+**Common Deployment Scenarios:**
+- **Render.com**: Set `VITE_API_BASE_URL` in frontend service environment variables
+- **Vercel**: Add to environment variables in project settings  
+- **Netlify**: Set in site environment variables
+- **Local Development**: Create `.env` file in `web-gui/` directory:
+  ```
+  VITE_API_BASE_URL=https://your-backend-url.onrender.com
+  ```
 
 ### **Docker Deployment**
 
@@ -275,6 +296,31 @@ CMD ["uvicorn", "npc_engine.api.npc_api:api.app", "--host", "0.0.0.0", "--port",
 docker build -t npc-engine .
 docker run -p 8000:8000 -e GOOGLE_API_KEY="..." npc-engine
 ```
+
+### **Render.com Deployment**
+
+Deploy both backend and frontend as separate services on Render.com:
+
+#### **Backend Service**
+1. Create a Web Service from your GitHub repo
+2. **Environment Variables**:
+   ```bash
+   GOOGLE_API_KEY=your_google_api_key_here
+   PORT=10000
+   ```
+3. **Build Command**: `pip install -r requirements.txt`
+4. **Start Command**: `python3 run_server.py`
+
+#### **Frontend Service**
+1. Create another Web Service or Static Site
+2. **Environment Variables**:
+   ```bash
+   VITE_API_BASE_URL=https://your-backend-service-name.onrender.com
+   ```
+3. **Build Command**: `cd web-gui && npm ci && npm run build`
+4. **Start Command**: `cd web-gui && npx serve -s dist -l 10000`
+
+> **💡 Tip**: Use the provided `render-separate.yaml` for automatic deployment configuration.
 
 ### **Kubernetes Deployment**
 

@@ -1,0 +1,31 @@
+services:
+  # Backend API Service
+  - type: web
+    name: npcengine-backend
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 run_server.py
+    envVars:
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: PORT
+        value: 10000
+    healthCheckPath: /health
+
+  # Frontend Service  
+  - type: web
+    name: npcengine-frontend
+    env: node
+    region: oregon
+    plan: starter
+    buildCommand: cd web-gui && npm ci && npm run build
+    startCommand: cd web-gui && npx serve -s dist -l 10000
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: VITE_API_BASE_URL
+        value: https://npcengine-1.onrender.com 

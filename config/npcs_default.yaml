@@ -259,8 +259,8 @@ schemas:
       default_value: 0.7
       required: false
       choices: null
-      min_value: 0
-      max_value: 1
+      min_value: 0.0
+      max_value: 1.0
       min_length: null
       max_length: null
     example_properties:
@@ -959,8 +959,8 @@ instances:
       active: true
     relationships: []
     session_data: {}
-    created_at: '2025-06-23T17:31:12.757741'
-    last_updated: '2025-06-23T17:31:12.757750'
+    created_at: '2025-06-28T14:23:25.471960'
+    last_updated: '2025-06-28T14:23:25.471966'
   npc_merchant_001:
     id: npc_merchant_001
     name: Gareth the Trader
@@ -999,8 +999,8 @@ instances:
       reputation: 0.85
     relationships: []
     session_data: {}
-    created_at: '2025-06-23T17:31:12.757756'
-    last_updated: '2025-06-23T17:31:12.757758'
+    created_at: '2025-06-28T14:23:25.471988'
+    last_updated: '2025-06-28T14:23:25.471991'
   npc_guard_001:
     id: npc_guard_001
     name: Captain Roderick
@@ -1047,8 +1047,8 @@ instances:
       description: Protects Martha and other villagers
       strength: 0.7
     session_data: {}
-    created_at: '2025-06-23T17:31:12.757770'
-    last_updated: '2025-06-23T17:31:12.757771'
+    created_at: '2025-06-28T14:23:25.472003'
+    last_updated: '2025-06-28T14:23:25.472004'
   npc_mage_001:
     id: npc_mage_001
     name: Eldara the Wise
@@ -1099,24 +1099,5 @@ instances:
       description: Provides healing services to the baker when needed
       strength: 0.5
     session_data: {}
-    created_at: '2025-06-23T17:31:12.757779'
-    last_updated: '2025-06-23T17:31:12.757780'
-  bob_1:
-    id: bob_1
-    name: Bob
-    description: 'A common man '
-    schema_id: generic_villager
-    properties:
-      job: Banker
-      age: 34
-      base_emotion: calm
-      personality_traits: honest, brave, loyal
-      health: 34
-      energy: 324
-      wealth: 500
-      location: bank
-      active: true
-    relationships: []
-    session_data: {}
-    created_at: '2025-06-23T12:01:22.667Z'
-    last_updated: '2025-06-23T12:01:22.667Z'
+    created_at: '2025-06-28T14:23:25.472012'
+    last_updated: '2025-06-28T14:23:25.472013'

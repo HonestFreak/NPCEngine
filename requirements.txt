@@ -1,18 +1,35 @@
-google-adk
-google-adk[vertexai]
+# Production Dependencies
+google-adk>=1.0.0
+google-adk[vertexai]>=1.0.0
 fastapi>=0.104.1
 uvicorn[standard]>=0.24.0
 pydantic>=2.5.0
-litellm>=1.0.0
+pydantic-settings>=2.1.0
 python-multipart>=0.0.6
 aiofiles>=23.2.1
-pyyaml>=6.0
-sqlalchemy>=2.0.0
-psycopg2-binary>=2.9.0
+pyyaml>=6.0.1
+python-dotenv>=1.0.0
 
-# Development dependencies (optional)
-pytest>=7.4.3
-pytest-asyncio>=0.21.1
-black>=23.11.0
-isort>=5.12.0
-httpx>=0.25.0 
+# Database Support
+sqlalchemy>=2.0.23
+psycopg2-binary>=2.9.0
+alembic>=1.13.0
+
+# Monitoring and Logging
+structlog>=23.2.0
+prometheus-client>=0.19.0
+
+# Security
+passlib[bcrypt]>=1.7.4
+python-jose[cryptography]>=3.3.0
+
+# Optional: Development Dependencies
+# Uncomment for development setup
+# pytest>=7.4.3
+# pytest-asyncio>=0.21.1
+# pytest-cov>=4.1.0
+# black>=23.11.0
+# isort>=5.12.0
+# mypy>=1.7.1
+# pre-commit>=3.5.0
+# httpx>=0.25.0 

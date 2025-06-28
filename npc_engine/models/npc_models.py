@@ -18,7 +18,7 @@ class NPCPersonality(BaseModel):
     dialogue_style: str = Field("casual", description="How the NPC speaks (formal, casual, aggressive, etc.)")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "name": "Marcus the Blacksmith",
                 "role": "blacksmith",
@@ -87,7 +87,7 @@ class NPCState(BaseModel):
     custom_attributes: Dict[str, Any] = Field(default_factory=dict, description="Game-specific attributes")
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "npc_id": "marcus_blacksmith",
                 "current_location": "blacksmith_shop",
@@ -109,7 +109,7 @@ class NPCData(BaseModel):
     memory: NPCMemory
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "personality": {
                     "name": "Marcus the Blacksmith",

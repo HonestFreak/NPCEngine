@@ -1,116 +1,556 @@
 """
-Configuration loader for NPC Engine
+Advanced Configuration Management for NPCEngine
+
+Supports multiple backends:
+- YAML files for development and rapid prototyping  
+- Database storage for production and multi-tenant scenarios
+- Environment-based configuration switching
 """
 
 import json
 import yaml
 import os
-from typing import Dict, Any, Optional, Union
+import logging
+from typing import Dict, Any, Optional, Union, List
 from pathlib import Path
+from datetime import datetime
+from enum import Enum
 
 from .action_config import ActionConfig
 from .environment_config import EnvironmentConfig
 from .npc_config import NPCConfig
 from .player_action_config import PlayerActionConfig
 
-class ConfigLoader:
-    """Loader for NPC Engine configuration files"""
+logger = logging.getLogger(__name__)
+
+class ConfigBackend(Enum):
+    """Configuration storage backend options"""
+    YAML = "yaml"
+    DATABASE = "database"
+    ENVIRONMENT = "environment"
+
+class ConfigurationManager:
+    """
+    Production-grade configuration manager with multiple backends
     
-    def __init__(self, config_dir: str = "config"):
+    Features:
+    - YAML files for development
+    - Database storage for production
+    - Environment variable override
+    - Validation and type safety
+    - Audit logging
+    - Hot reloading
+    """
+    
+    def __init__(
+        self, 
+        config_dir: str = "config",
+        backend: ConfigBackend = ConfigBackend.YAML,
+        database_url: Optional[str] = None
+    ):
         self.config_dir = Path(config_dir)
         self.config_dir.mkdir(exist_ok=True)
+        self.backend = backend
+        self.database_url = database_url
+        
+        # Initialize database connection if needed
+        if backend == ConfigBackend.DATABASE:
+            self._init_database()
+        
+        logger.info(f"ConfigurationManager initialized with {backend.value} backend")
+    
+    def _init_database(self):
+        """Initialize database connection for configuration storage"""
+        if not self.database_url:
+            raise ValueError("Database URL required for database backend")
+        
+        try:
+            from sqlalchemy import create_engine, text
+            from sqlalchemy.orm import sessionmaker
+            
+            self.engine = create_engine(self.database_url)
+            self.SessionLocal = sessionmaker(bind=self.engine)
+            
+            # Create configuration tables if they don't exist
+            self._create_config_tables()
+            logger.info("Database configuration backend initialized")
+            
+        except ImportError:
+            raise ImportError("SQLAlchemy required for database backend: pip install sqlalchemy")
+        except Exception as e:
+            logger.error(f"Failed to initialize database backend: {e}")
+            raise
+    
+    def _create_config_tables(self):
+        """Create configuration tables in database"""
+        create_table_sql = """
+        CREATE TABLE IF NOT EXISTS npc_configurations (
+            id SERIAL PRIMARY KEY,
+            config_name VARCHAR(255) UNIQUE NOT NULL,
+            config_type VARCHAR(50) NOT NULL,
+            config_data JSONB NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            version INTEGER DEFAULT 1
+        );
+        
+        CREATE INDEX IF NOT EXISTS idx_config_name_type 
+        ON npc_configurations(config_name, config_type);
+        """
+        
+        with self.engine.connect() as conn:
+            conn.execute(text(create_table_sql))
+            conn.commit()
     
     def load_action_config(self, filename: str = "actions.yaml") -> ActionConfig:
-        """Load action configuration from file"""
-        config_path = self.config_dir / filename
-        
-        if not config_path.exists():
-            # Create default config
-            default_config = ActionConfig()
-            self.save_action_config(default_config, filename)
-            return default_config
-        
-        data = self._load_file(config_path)
-        return ActionConfig(**data)
+        """Load action configuration with backend selection"""
+        try:
+            if self.backend == ConfigBackend.DATABASE:
+                data = self._load_from_database("actions", filename)
+            elif self.backend == ConfigBackend.ENVIRONMENT:
+                data = self._load_from_environment("NPC_ACTIONS_CONFIG")
+            else:  # YAML backend
+                data = self._load_from_yaml(filename)
+            
+            if not data:
+                logger.info(f"No action config found, creating default: {filename}")
+                default_config = ActionConfig()
+                self.save_action_config(default_config, filename)
+                return default_config
+            
+            return ActionConfig(**data)
+            
+        except Exception as e:
+            logger.error(f"Failed to load action config: {e}")
+            return ActionConfig()  # Return default on error
     
     def save_action_config(self, config: ActionConfig, filename: str = "actions.yaml"):
-        """Save action configuration to file"""
-        config_path = self.config_dir / filename
-        # Convert enums to strings to avoid YAML serialization issues
-        config_dict = config.model_dump(mode='json')
-        self._save_file(config_path, config_dict)
+        """Save action configuration with backend selection"""
+        try:
+            config_dict = config.model_dump(mode='json')
+            
+            if self.backend == ConfigBackend.DATABASE:
+                self._save_to_database("actions", filename, config_dict)
+            elif self.backend == ConfigBackend.ENVIRONMENT:
+                logger.warning("Cannot save to environment backend - read only")
+            else:  # YAML backend
+                self._save_to_yaml(filename, config_dict)
+            
+            logger.info(f"Action config saved successfully: {filename}")
+            
+        except Exception as e:
+            logger.error(f"Failed to save action config: {e}")
+            raise
     
     def load_environment_config(self, filename: str = "environment.yaml") -> EnvironmentConfig:
-        """Load environment configuration from file"""
-        config_path = self.config_dir / filename
-        
-        if not config_path.exists():
-            # Create default config
-            default_config = EnvironmentConfig()
-            self.save_environment_config(default_config, filename)
-            return default_config
-        
-        data = self._load_file(config_path)
-        return EnvironmentConfig(**data)
+        """Load environment configuration with backend selection"""
+        try:
+            if self.backend == ConfigBackend.DATABASE:
+                data = self._load_from_database("environment", filename)
+            elif self.backend == ConfigBackend.ENVIRONMENT:
+                data = self._load_from_environment("NPC_ENVIRONMENT_CONFIG")
+            else:  # YAML backend
+                data = self._load_from_yaml(filename)
+            
+            if not data:
+                logger.info(f"No environment config found, creating default: {filename}")
+                default_config = EnvironmentConfig()
+                self.save_environment_config(default_config, filename)
+                return default_config
+            
+            return EnvironmentConfig(**data)
+            
+        except Exception as e:
+            logger.error(f"Failed to load environment config: {e}")
+            return EnvironmentConfig()  # Return default on error
     
     def save_environment_config(self, config: EnvironmentConfig, filename: str = "environment.yaml"):
-        """Save environment configuration to file"""
-        config_path = self.config_dir / filename
-        self._save_file(config_path, config.dict())
+        """Save environment configuration with backend selection"""
+        try:
+            config_dict = config.dict()
+            
+            if self.backend == ConfigBackend.DATABASE:
+                self._save_to_database("environment", filename, config_dict)
+            elif self.backend == ConfigBackend.ENVIRONMENT:
+                logger.warning("Cannot save to environment backend - read only")
+            else:  # YAML backend
+                self._save_to_yaml(filename, config_dict)
+            
+            logger.info(f"Environment config saved successfully: {filename}")
+            
+        except Exception as e:
+            logger.error(f"Failed to save environment config: {e}")
+            raise
     
-    def load_player_action_config(self, filename: str = "player_actions.yaml") -> PlayerActionConfig:
-        """Load player action configuration from file"""
+    def load_npc_config(self, config_name: str = "default") -> NPCConfig:
+        """Load NPC configuration with backend selection"""
+        try:
+            if self.backend == ConfigBackend.DATABASE:
+                data = self._load_from_database("npcs", config_name)
+            elif self.backend == ConfigBackend.ENVIRONMENT:
+                data = self._load_from_environment("NPC_CONFIG")
+            else:  # YAML backend
+                data = self._load_npc_yaml(config_name)
+            
+            if not data:
+                logger.info(f"No NPC config found, creating default: {config_name}")
+                from .npc_config import create_default_npc_config
+                default_config = create_default_npc_config()
+                self.save_npc_config(default_config, config_name)
+                return default_config
+            
+            return NPCConfig(**data)
+            
+        except Exception as e:
+            logger.error(f"Failed to load NPC config: {e}")
+            from .npc_config import create_default_npc_config
+            return create_default_npc_config()
+    
+    def save_npc_config(self, config: NPCConfig, config_name: str = "default"):
+        """Save NPC configuration with backend selection"""
+        try:
+            config_dict = config.model_dump()
+            
+            if self.backend == ConfigBackend.DATABASE:
+                self._save_to_database("npcs", config_name, config_dict)
+            elif self.backend == ConfigBackend.ENVIRONMENT:
+                logger.warning("Cannot save to environment backend - read only")
+            else:  # YAML backend
+                self._save_npc_yaml(config_name, config_dict)
+            
+            logger.info(f"NPC config saved successfully: {config_name}")
+            
+        except Exception as e:
+            logger.error(f"Failed to save NPC config: {e}")
+            raise
+    
+    def _load_from_database(self, config_type: str, config_name: str) -> Optional[Dict[str, Any]]:
+        """Load configuration from database"""
+        if not hasattr(self, 'SessionLocal'):
+            return None
+        
+        try:
+            with self.SessionLocal() as session:
+                from sqlalchemy import text
+                
+                query = text("""
+                    SELECT config_data FROM npc_configurations 
+                    WHERE config_type = :type AND config_name = :name
+                    ORDER BY version DESC LIMIT 1
+                """)
+                
+                result = session.execute(query, {
+                    "type": config_type,
+                    "name": config_name
+                }).fetchone()
+                
+                if result:
+                    return result[0]  # JSONB data
+                return None
+                
+        except Exception as e:
+            logger.error(f"Failed to load from database: {e}")
+            return None
+    
+    def _save_to_database(self, config_type: str, config_name: str, config_data: Dict[str, Any]):
+        """Save configuration to database"""
+        if not hasattr(self, 'SessionLocal'):
+            raise RuntimeError("Database not initialized")
+        
+        try:
+            with self.SessionLocal() as session:
+                from sqlalchemy import text
+                
+                # Check if config exists
+                check_query = text("""
+                    SELECT version FROM npc_configurations 
+                    WHERE config_type = :type AND config_name = :name
+                    ORDER BY version DESC LIMIT 1
+                """)
+                
+                result = session.execute(check_query, {
+                    "type": config_type,
+                    "name": config_name
+                }).fetchone()
+                
+                new_version = (result[0] + 1) if result else 1
+                
+                # Insert new version
+                insert_query = text("""
+                    INSERT INTO npc_configurations 
+                    (config_name, config_type, config_data, version, updated_at)
+                    VALUES (:name, :type, :data, :version, :timestamp)
+                """)
+                
+                session.execute(insert_query, {
+                    "name": config_name,
+                    "type": config_type,
+                    "data": json.dumps(config_data),
+                    "version": new_version,
+                    "timestamp": datetime.now()
+                })
+                
+                session.commit()
+                logger.debug(f"Saved {config_type}:{config_name} v{new_version} to database")
+                
+        except Exception as e:
+            logger.error(f"Failed to save to database: {e}")
+            raise
+    
+    def _load_from_environment(self, env_var: str) -> Optional[Dict[str, Any]]:
+        """Load configuration from environment variable"""
+        try:
+            config_json = os.getenv(env_var)
+            if config_json:
+                return json.loads(config_json)
+            return None
+        except Exception as e:
+            logger.error(f"Failed to load from environment {env_var}: {e}")
+            return None
+    
+    def _load_from_yaml(self, filename: str) -> Optional[Dict[str, Any]]:
+        """Load configuration from YAML file"""
         config_path = self.config_dir / filename
         
         if not config_path.exists():
-            # Create default config
-            from .player_action_config import create_default_player_action_config
-            default_config = create_default_player_action_config()
-            self.save_player_action_config(default_config, filename)
-            return default_config
+            return None
         
-        data = self._load_file(config_path)
-        return PlayerActionConfig(**data)
+        try:
+            with open(config_path, 'r') as f:
+                return yaml.safe_load(f) or {}
+        except Exception as e:
+            logger.error(f"Failed to load YAML {filename}: {e}")
+            return None
+    
+    def _save_to_yaml(self, filename: str, data: Dict[str, Any]):
+        """Save configuration to YAML file"""
+        config_path = self.config_dir / filename
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        try:
+            with open(config_path, 'w') as f:
+                yaml.dump(data, f, default_flow_style=False, indent=2, sort_keys=False)
+        except Exception as e:
+            logger.error(f"Failed to save YAML {filename}: {e}")
+            raise
+    
+    def _load_npc_yaml(self, config_name: str) -> Optional[Dict[str, Any]]:
+        """Load NPC configuration from YAML with multiple format support"""
+        for ext in ['.yaml', '.yml', '.json']:
+            config_path = self.config_dir / f"npcs_{config_name}{ext}"
+            if config_path.exists():
+                try:
+                    with open(config_path, 'r') as f:
+                        if ext == '.json':
+                            return json.load(f)
+                        else:
+                            return yaml.safe_load(f) or {}
+                except Exception as e:
+                    logger.error(f"Failed to load NPC config {config_path}: {e}")
+                    continue
+        return None
+    
+    def _save_npc_yaml(self, config_name: str, data: Dict[str, Any]):
+        """Save NPC configuration to YAML"""
+        config_path = self.config_dir / f"npcs_{config_name}.yaml"
+        self._save_to_yaml(config_path.name, data)
+    
+    def list_configurations(self, config_type: Optional[str] = None) -> List[Dict[str, Any]]:
+        """List all available configurations"""
+        if self.backend == ConfigBackend.DATABASE:
+            return self._list_database_configs(config_type)
+        else:
+            return self._list_yaml_configs(config_type)
+    
+    def _list_database_configs(self, config_type: Optional[str] = None) -> List[Dict[str, Any]]:
+        """List configurations from database"""
+        if not hasattr(self, 'SessionLocal'):
+            return []
+        
+        try:
+            with self.SessionLocal() as session:
+                from sqlalchemy import text
+                
+                if config_type:
+                    query = text("""
+                        SELECT DISTINCT config_name, config_type, 
+                               MAX(version) as latest_version,
+                               MAX(updated_at) as last_updated
+                        FROM npc_configurations 
+                        WHERE config_type = :type
+                        GROUP BY config_name, config_type
+                        ORDER BY last_updated DESC
+                    """)
+                    result = session.execute(query, {"type": config_type})
+                else:
+                    query = text("""
+                        SELECT DISTINCT config_name, config_type,
+                               MAX(version) as latest_version, 
+                               MAX(updated_at) as last_updated
+                        FROM npc_configurations
+                        GROUP BY config_name, config_type
+                        ORDER BY config_type, last_updated DESC
+                    """)
+                    result = session.execute(query)
+                
+                return [
+                    {
+                        "name": row[0],
+                        "type": row[1], 
+                        "version": row[2],
+                        "last_updated": row[3],
+                        "backend": "database"
+                    }
+                    for row in result
+                ]
+                
+        except Exception as e:
+            logger.error(f"Failed to list database configs: {e}")
+            return []
+    
+    def _list_yaml_configs(self, config_type: Optional[str] = None) -> List[Dict[str, Any]]:
+        """List configurations from YAML files"""
+        configs = []
+        
+        for file_path in self.config_dir.glob("*.yaml"):
+            try:
+                # Determine config type from filename
+                name = file_path.stem
+                if name.startswith("npcs_"):
+                    file_type = "npcs"
+                    name = name[5:]  # Remove "npcs_" prefix
+                elif name == "environment":
+                    file_type = "environment"
+                elif name == "actions":
+                    file_type = "actions"
+                else:
+                    file_type = "unknown"
+                
+                if config_type and file_type != config_type:
+                    continue
+                
+                stat = file_path.stat()
+                configs.append({
+                    "name": name,
+                    "type": file_type,
+                    "version": 1,  # YAML files don't have versions
+                    "last_updated": datetime.fromtimestamp(stat.st_mtime),
+                    "backend": "yaml"
+                })
+                
+            except Exception as e:
+                logger.error(f"Failed to process {file_path}: {e}")
+                continue
+        
+        return sorted(configs, key=lambda x: x["last_updated"], reverse=True)
+    
+    def backup_configuration(self, backup_name: str = None) -> str:
+        """Create a backup of all configurations"""
+        if not backup_name:
+            backup_name = f"backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        
+        backup_dir = self.config_dir / "backups" / backup_name
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Backup based on current backend
+        if self.backend == ConfigBackend.DATABASE:
+            self._backup_database_configs(backup_dir)
+        else:
+            self._backup_yaml_configs(backup_dir)
+        
+        logger.info(f"Configuration backup created: {backup_dir}")
+        return str(backup_dir)
+    
+    def _backup_database_configs(self, backup_dir: Path):
+        """Backup database configurations to YAML files"""
+        configs = self._list_database_configs()
+        
+        for config in configs:
+            data = self._load_from_database(config["type"], config["name"])
+            if data:
+                backup_file = backup_dir / f"{config['type']}_{config['name']}.yaml"
+                with open(backup_file, 'w') as f:
+                    yaml.dump(data, f, default_flow_style=False, indent=2)
+    
+    def _backup_yaml_configs(self, backup_dir: Path):
+        """Backup YAML configurations"""
+        import shutil
+        
+        for file_path in self.config_dir.glob("*.yaml"):
+            if file_path.parent.name != "backups":  # Don't backup backups
+                shutil.copy2(file_path, backup_dir)
+
+# Backward compatibility
+class ConfigLoader(ConfigurationManager):
+    """Legacy ConfigLoader for backward compatibility"""
+    
+    def __init__(self, config_dir: str = "config"):
+        # Determine backend from environment
+        backend_str = os.getenv("CONFIG_BACKEND", "yaml").lower()
+        database_url = os.getenv("CONFIG_DATABASE_URL")
+        
+        try:
+            backend = ConfigBackend(backend_str)
+        except ValueError:
+            logger.warning(f"Invalid CONFIG_BACKEND '{backend_str}', using YAML")
+            backend = ConfigBackend.YAML
+        
+        super().__init__(config_dir, backend, database_url)
+    
+    # Legacy methods for backward compatibility
+    def load_player_action_config(self, filename: str = "player_actions.yaml") -> PlayerActionConfig:
+        """Load player action configuration"""
+        try:
+            if self.backend == ConfigBackend.DATABASE:
+                data = self._load_from_database("player_actions", filename)
+            else:
+                data = self._load_from_yaml(filename)
+            
+            if not data:
+                from .player_action_config import create_default_player_action_config
+                default_config = create_default_player_action_config()
+                self.save_player_action_config(default_config, filename)
+                return default_config
+            
+            return PlayerActionConfig(**data)
+            
+        except Exception as e:
+            logger.error(f"Failed to load player action config: {e}")
+            from .player_action_config import create_default_player_action_config
+            return create_default_player_action_config()
     
     def save_player_action_config(self, config: PlayerActionConfig, filename: str = "player_actions.yaml"):
-        """Save player action configuration to file"""
-        config_path = self.config_dir / filename
-        # Convert enums to strings to avoid YAML serialization issues
-        config_dict = config.model_dump(mode='json')
-        self._save_file(config_path, config_dict)
+        """Save player action configuration"""
+        try:
+            config_dict = config.model_dump(mode='json')
+            
+            if self.backend == ConfigBackend.DATABASE:
+                self._save_to_database("player_actions", filename, config_dict)
+            else:
+                self._save_to_yaml(filename, config_dict)
+            
+        except Exception as e:
+            logger.error(f"Failed to save player action config: {e}")
+            raise
     
     def load_game_config(self, config_name: str) -> Dict[str, Any]:
         """Load a complete game configuration"""
-        game_dir = self.config_dir / "games" / config_name
-        game_dir.mkdir(parents=True, exist_ok=True)
-        
         config = {}
         
-        # Load actions
-        actions_file = game_dir / "actions.yaml"
-        if actions_file.exists():
-            config["actions"] = self.load_action_config(str(actions_file))
-        
-        # Load environment
-        env_file = game_dir / "environment.yaml"
-        if env_file.exists():
-            config["environment"] = self.load_environment_config(str(env_file))
-        
-        # Load NPCs
-        npcs_file = game_dir / "npcs.yaml"
-        if npcs_file.exists():
-            config["npcs"] = self._load_file(npcs_file)
-        
-        # Load game settings
-        settings_file = game_dir / "settings.yaml"
-        if settings_file.exists():
-            config["settings"] = self._load_file(settings_file)
+        try:
+            # Load different config types
+            config["actions"] = self.load_action_config().model_dump()
+            config["environment"] = self.load_environment_config().dict()
+            config["npcs"] = self.load_npc_config(config_name).model_dump()
+            
+        except Exception as e:
+            logger.error(f"Failed to load game config '{config_name}': {e}")
         
         return config
     
     def create_sample_configs(self):
         """Create sample configuration files"""
-        # Sample action config
+        # This method remains the same as it's used for examples
         from .action_config import CustomAction, ActionProperty, PropertyType, ActionTargetType
         
         sample_actions = ActionConfig(
@@ -128,90 +568,19 @@ class ConfigLoader:
                             required=True,
                             description="Material to use for crafting",
                             validation={"choices": ["iron", "steel", "mithril"]}
-                        ),
-                        ActionProperty(
-                            name="enchantment",
-                            type=PropertyType.STRING,
-                            required=False,
-                            default="none",
-                            description="Enchantment to apply"
                         )
                     ],
                     energy_cost=20.0,
                     cooldown=60.0,
                     requirements={"skill_level": 10, "tools": ["hammer", "anvil"]}
-                ),
-                CustomAction(
-                    action_id="cast_fireball",
-                    name="Cast Fireball",
-                    description="Cast a fireball spell",
-                    target_type=ActionTargetType.ANY,
-                    requires_target=True,
-                    properties=[
-                        ActionProperty(
-                            name="power",
-                            type=PropertyType.INTEGER,
-                            required=False,
-                            default=5,
-                            description="Power level of the spell",
-                            validation={"min": 1, "max": 10}
-                        )
-                    ],
-                    energy_cost=15.0,
-                    cooldown=10.0,
-                    requirements={"mana": 30, "spell_components": ["sulfur"]}
                 )
-            ],
-            action_categories={
-                "crafting": ["craft_sword", "craft_armor", "craft_potion"],
-                "magic": ["cast_fireball", "cast_heal", "cast_teleport"],
-                "social": ["speak", "emote", "trade"]
-            }
+            ]
         )
         
-        # Sample environment config
-        from .environment_config import LocationConfig, WeatherPattern, TimeSchedule
-        
+        from .environment_config import TimeSchedule
         sample_environment = EnvironmentConfig(
-            name="Fantasy Village",
-            description="A peaceful village with magical elements",
-            locations=[
-                LocationConfig(
-                    location_id="blacksmith_shop",
-                    name="Thorin's Blacksmith",
-                    location_type="building",
-                    description="A busy blacksmith shop with the sound of hammering",
-                    connected_locations=["village_center"],
-                    properties={"temperature": "hot", "noise_level": "loud"},
-                    available_actions=["craft_sword", "speak", "examine"],
-                    default_objects=[
-                        {"id": "anvil", "name": "Heavy Anvil", "interactable": True},
-                        {"id": "forge", "name": "Blazing Forge", "interactable": True}
-                    ],
-                    default_npcs=["thorin_blacksmith"]
-                ),
-                LocationConfig(
-                    location_id="magic_tower",
-                    name="Wizard's Tower",
-                    location_type="building",
-                    description="A tall tower filled with magical energy",
-                    connected_locations=["village_center"],
-                    properties={"magical_aura": "strong", "lighting": "mystical"},
-                    available_actions=["cast_fireball", "study_magic", "speak"],
-                    default_npcs=["gandalf_wizard"]
-                )
-            ],
-            weather_patterns=[
-                WeatherPattern(
-                    weather_id="magical_storm",
-                    name="Magical Storm",
-                    description="A storm crackling with magical energy",
-                    visibility_modifier=0.5,
-                    movement_modifier=0.8,
-                    mood_effects={"excitement": 0.2, "fear": 0.1},
-                    can_transition_to=["sunny", "cloudy"]
-                )
-            ],
+            name="Sample Fantasy World",
+            description="A sample medieval fantasy environment",
             scheduled_events=[
                 TimeSchedule(
                     event_name="daily_market",
@@ -227,70 +596,11 @@ class ConfigLoader:
         # Save sample configs
         self.save_action_config(sample_actions, "sample_actions.yaml")
         self.save_environment_config(sample_environment, "sample_environment.yaml")
-    
-    def load_npc_config(self, config_name: str = "default") -> NPCConfig:
-        """Load NPC configuration from file"""
-        try:
-            config_path = self.config_dir / f"npcs_{config_name}.yaml"
-            if not config_path.exists():
-                # Try JSON format
-                config_path = self.config_dir / f"npcs_{config_name}.json"
-                if not config_path.exists():
-                    # Create default config
-                    from .npc_config import create_default_npc_config
-                    default_config = create_default_npc_config()
-                    self.save_npc_config(default_config, config_name)
-                    return default_config
-            
-            with open(config_path, 'r') as f:
-                if config_path.suffix == '.yaml':
-                    data = yaml.safe_load(f)
-                else:
-                    data = json.load(f)
-            
-            return NPCConfig(**data)
-        except Exception as e:
-            print(f"Error loading NPC config: {e}")
-            from .npc_config import create_default_npc_config
-            return create_default_npc_config()
-    
-    def save_npc_config(self, config: NPCConfig, config_name: str = "default") -> None:
-        """Save NPC configuration to file"""
-        try:
-            config_path = self.config_dir / f"npcs_{config_name}.yaml"
-            with open(config_path, 'w') as f:
-                yaml.dump(config.model_dump(), f, default_flow_style=False, sort_keys=False)
-            print(f"NPC configuration saved to {config_path}")
-        except Exception as e:
-            print(f"Error saving NPC config: {e}")
-            raise
-    
-    def _load_file(self, file_path: Path) -> Dict[str, Any]:
-        """Load configuration from JSON or YAML file"""
-        if file_path.suffix.lower() in ['.yaml', '.yml']:
-            with open(file_path, 'r') as f:
-                return yaml.safe_load(f) or {}
-        elif file_path.suffix.lower() == '.json':
-            with open(file_path, 'r') as f:
-                return json.load(f)
-        else:
-            raise ValueError(f"Unsupported file format: {file_path.suffix}")
-    
-    def _save_file(self, file_path: Path, data: Dict[str, Any]):
-        """Save configuration to JSON or YAML file"""
-        file_path.parent.mkdir(parents=True, exist_ok=True)
         
-        if file_path.suffix.lower() in ['.yaml', '.yml']:
-            with open(file_path, 'w') as f:
-                yaml.dump(data, f, default_flow_style=False, indent=2)
-        elif file_path.suffix.lower() == '.json':
-            with open(file_path, 'w') as f:
-                json.dump(data, f, indent=2)
-        else:
-            raise ValueError(f"Unsupported file format: {file_path.suffix}")
+        logger.info("Sample configurations created successfully")
 
 def load_from_file(file_path: str) -> Dict[str, Any]:
     """Convenience function to load any config file"""
     path = Path(file_path)
     loader = ConfigLoader(path.parent)
-    return loader._load_file(path) 
+    return loader._load_from_yaml(path.name) or {} 

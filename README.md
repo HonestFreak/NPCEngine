@@ -343,30 +343,15 @@ For production environments, configurations are stored in your database with ful
 
 ## 🚀 Future Roadmap
 
-### **🎯 Performance & Scaling**
-- [ ] **Sub-100ms Latency** - Advanced caching and LLM optimization
-- [ ] **Horizontal Auto-scaling** - Kubernetes-native with smart load balancing  
-- [ ] **Edge Deployment** - Global CDN integration for reduced latency
-- [ ] **GPU Acceleration** - Optional local LLM inference for ultra-low latency
-
-### **🌐 Multiplayer & Real-time**
-- [ ] **WebSocket Support** - Real-time bidirectional communication
-- [ ] **Multiplayer Coordination** - Cross-player NPC interactions
-- [ ] **Event Broadcasting** - Real-time world events to all connected clients
-- [ ] **Player Presence** - NPCs react to player login/logout events
-
 ### **🎮 Game Engine Integration**
 - [ ] **Unity Package** - Native Unity integration with C# SDK
 - [ ] **Unreal Engine Plugin** - Blueprint and C++ integration  
 - [ ] **Godot Extension** - GDScript native integration
-- [ ] **JavaScript SDK** - Enhanced web game integration
-- [ ] **Python Game Libraries** - Pygame, Arcade, Panda3D integration
+- [ ] **JavaScript SDK** - Enhanced web game library
 
 ### **🧠 Advanced AI Features**
 - [ ] **Multi-Modal NPCs** - Voice, image, and gesture understanding
 - [ ] **Procedural Personality Generation** - AI-generated diverse NPCs
-- [ ] **Emotional Intelligence** - Advanced emotion modeling and response
-- [ ] **Learning NPCs** - Characters that evolve based on player interactions
 
 ### **🛠️ Developer Experience**
 - [ ] **Visual NPC Designer** - Drag-and-drop personality and behavior creation
@@ -374,11 +359,6 @@ For production environments, configurations are stored in your database with ful
 - [ ] **Performance Profiler** - Built-in tools for optimization
 - [ ] **A/B Testing Framework** - Compare different NPC configurations
 
-### **☁️ Enterprise Features**
-- [ ] **Multi-tenancy** - Isolated environments for different games/studios
-- [ ] **Analytics Dashboard** - Deep insights into NPC performance and player engagement
-- [ ] **Rate Limiting & Quotas** - Cost control and abuse prevention
-- [ ] **White-label Solutions** - Customizable branding for enterprise clients
 
 ## 🤝 Contributing
 
@@ -407,50 +387,14 @@ python start_npc_engine.py --reload
 
 ### **Contribution Areas**
 - 🐛 **Bug Reports & Fixes** - Help us improve stability
-- ✨ **Feature Development** - Build new capabilities  
-- 📚 **Documentation** - Improve guides and examples
 - 🎮 **Game Engine Integrations** - Create plugins for popular engines
-- 🌍 **Internationalization** - Add multi-language support
 - 🧪 **Testing** - Expand test coverage and scenarios
 
-### **Community**
-- 💬 **Discord**: [Join our developer community](https://discord.gg/npcengine)
-- 📧 **Discussions**: [GitHub Discussions](https://github.com/your-org/npc-engine/discussions)
-- 📝 **Blog**: [Technical articles and tutorials](https://blog.npcengine.dev)
-- 🐛 **Issues**: [Report bugs and request features](https://github.com/your-org/npc-engine/issues)
-
-## 📊 Performance Benchmarks
-
-| Metric | Value | Details |
-|--------|-------|---------|
-| **Response Time** | <200ms | Average NPC response time with Gemini |
-| **Concurrent NPCs** | 1000+ | Per server instance with 4GB RAM |
-| **Sessions** | 10,000+ | Concurrent game sessions supported |
-| **Throughput** | 5000 req/s | Events processed per second |
-| **Memory Usage** | <512MB | Base memory footprint |
-| **Startup Time** | <5s | From cold start to ready |
-
-*Benchmarks performed on standard cloud instances. Performance may vary based on LLM provider and complexity.*
-
-## 📄 License
-
-NPCEngine is released under the **MIT License**. See [LICENSE](LICENSE) for details.
-
-## 🙏 Acknowledgments
-
-- **Google ADK Team** - For the incredible agent development kit
-- **FastAPI Community** - For the amazing web framework  
-- **React Team** - For the powerful frontend library
-- **Open Source Community** - For inspiration and collaboration
 
 ---
 
 <div align="center">
 
-**Built with ❤️ by the NPCEngine Team**
-
-[Website](https://npcengine.dev) • [Documentation](https://docs.npcengine.dev) • [Discord](https://discord.gg/npcengine) • [Blog](https://blog.npcengine.dev)
-
-**⭐ Star us on GitHub if NPCEngine helps your project!**
+**Built with ❤️ by the HonestFreak*
 
 </div> 
